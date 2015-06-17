@@ -118,6 +118,7 @@ public class UdpEndpoint implements Endpoint
         }
 
 
+        try {
         DatagramPacket p = new DatagramPacket( data.array(), data.position(),
                                                data.remaining(), address );
 
@@ -126,6 +127,9 @@ public class UdpEndpoint implements Endpoint
         kernel.enqueueWrite( this, p );
 
         //socket.send(p);
+        } catch( IOException e ) {
+            throw new KernelException( "Error sending datagram to:" + address, e );
+    }
     }
 
     public String toString()
