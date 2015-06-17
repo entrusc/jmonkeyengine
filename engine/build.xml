@@ -592,6 +592,7 @@
 		<artifact:remoteRepository id="nexus.drkblu" url="${maven.deploy.url}"> 
 			<releases enabled="true"/> 
 			<snapshots enabled="false"/> 
+			<authentication username="${maven.deploy.username}" password="${maven.deploy.password}"/>
 		</artifact:remoteRepository> 		
 		
         <artifact:pom id="jme3-lib-lwjgl-pom" artifactId="lwjgl" name="lwjgl" groupId="com.jme3-lib" version="2.9.0">
