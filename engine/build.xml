@@ -327,8 +327,7 @@
     <target name="maven-repo" depends="jar" description="Creates a fucking maven repo from the jars">
         <property file="../sdk/nbproject/project.properties"/>
 		<property environment="env"/>
-		<property name="maven.deploy.url" value="http://nexus.drkblu:8081/nexus/content/repositories/releases/"/>
-		<property name="plugins.version" value="3.0.0.${env.BUILD_NUMBER}"/>
+		<property name="jme.version" value="3.0.0.${env.BUILD_NUMBER}"/>
 		
         <mkdir dir="${build.dir}/maven-pom"/>
         <mkdir dir="${dist.dir}/maven"/>
@@ -589,7 +588,7 @@
         
 		<artifact:install-provider artifactId="wagon-http" version="2.0"/>
 		
-		<artifact:remoteRepository id="nexus.drkblu" url="${maven.deploy.url}"> 
+		<artifact:remoteRepository id="nexus" url="${maven.deploy.url}"> 
 			<releases enabled="true"/> 
 			<snapshots enabled="false"/> 
 			<authentication username="${maven.deploy.username}" password="${maven.deploy.password}"/>
@@ -601,7 +600,7 @@
         <artifact:writepom pomRefId="jme3-lib-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-pom.xml"/>
         <artifact:pom id="jme3-lib-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-pom.xml"/>
         <artifact:deploy file="lib/lwjgl/lwjgl.jar">
-			<remoteRepository refid="nexus.drkblu"/> 
+			<remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-lwjgl-pom"/>
         </artifact:deploy>
         
@@ -611,7 +610,7 @@
         <artifact:writepom pomRefId="jme3-lib-jinput-pom" file="${build.dir}/maven-pom/jme3-lib-jinput-pom.xml"/>
         <artifact:pom id="jme3-lib-jinput-pom" file="${build.dir}/maven-pom/jme3-lib-jinput-pom.xml"/>
         <artifact:deploy file="lib/lwjgl/jinput.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-jinput-pom"/>
         </artifact:deploy>
         
@@ -621,27 +620,27 @@
         <artifact:writepom pomRefId="jme3-lib-lwjgl-natives-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-natives-pom.xml"/>
         <artifact:pom id="jme3-lib-lwjgl-natives-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-natives-pom.xml"/>
         <artifact:deploy file="lib/lwjgl/jME3-lwjgl-natives.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-lwjgl-natives-pom"/>
         </artifact:deploy>
         
-        <artifact:pom id="jme3-lib-jbullet-pom" artifactId="jbullet" name="jbullet" groupId="com.jme3-lib" version="${plugins.version}-jme">
+        <artifact:pom id="jme3-lib-jbullet-pom" artifactId="jbullet" name="jbullet" groupId="com.jme3-lib" version="${jme.version}-jme">
             <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
         <artifact:pom id="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
         <artifact:deploy file="lib/jbullet/jbullet.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-jbullet-pom"/>
         </artifact:deploy>
         
-        <artifact:pom id="jme3-lib-stack-alloc-pom" artifactId="stack-alloc" name="stack-alloc" groupId="com.jme3-lib" version="${plugins.version}-jme">
+        <artifact:pom id="jme3-lib-stack-alloc-pom" artifactId="stack-alloc" name="stack-alloc" groupId="com.jme3-lib" version="${jme.version}-jme">
             <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
         <artifact:pom id="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
         <artifact:deploy file="lib/jbullet/stack-alloc.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-stack-alloc-pom"/>
         </artifact:deploy>
 
@@ -651,7 +650,7 @@
         <artifact:writepom pomRefId="jme3-lib-vecmath-pom" file="${build.dir}/maven-pom/jme3-lib-vecmath-pom.xml"/>
         <artifact:pom id="jme3-lib-vecmath-pom" file="${build.dir}/maven-pom/jme3-lib-vecmath-pom.xml"/>
         <artifact:deploy file="lib/jbullet/vecmath.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-vecmath-pom"/>
         </artifact:deploy>
 
@@ -661,7 +660,7 @@
         <artifact:writepom pomRefId="jme3-lib-oggd-pom" file="${build.dir}/maven-pom/jme3-lib-oggd-pom.xml"/>
         <artifact:pom id="jme3-lib-oggd-pom" file="${build.dir}/maven-pom/jme3-lib-oggd-pom.xml"/>
         <artifact:deploy file="lib/jogg/j-ogg-oggd.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-oggd-pom"/>
         </artifact:deploy>
 
@@ -671,7 +670,7 @@
         <artifact:writepom pomRefId="jme3-lib-vorbisd-pom" file="${build.dir}/maven-pom/jme3-lib-vorbisd-pom.xml"/>
         <artifact:pom id="jme3-lib-vorbisd-pom" file="${build.dir}/maven-pom/jme3-lib-vorbisd-pom.xml"/>
         <artifact:deploy file="lib/jogg/j-ogg-vorbisd.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-vorbisd-pom"/>
         </artifact:deploy>
 
@@ -681,7 +680,7 @@
         <artifact:writepom pomRefId="jme3-lib-nifty-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-pom.xml"/>
         <artifact:deploy file="lib/niftygui/nifty.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-nifty-pom"/>
             <attach file="lib/niftygui/nifty-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
@@ -692,7 +691,7 @@
         <artifact:writepom pomRefId="jme3-lib-nifty-default-controls-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-default-controls-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-default-controls-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-default-controls-pom.xml"/>
         <artifact:deploy file="lib/niftygui/nifty-default-controls.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-nifty-default-controls-pom"/>
             <attach file="lib/niftygui/nifty-default-controls-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
@@ -703,7 +702,7 @@
         <artifact:writepom pomRefId="jme3-lib-nifty-style-black-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-style-black-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-style-black-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-style-black-pom.xml"/>
         <artifact:deploy file="lib/niftygui/nifty-style-black.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-nifty-style-black-pom"/>
         </artifact:deploy>
 
@@ -713,7 +712,7 @@
         <artifact:writepom pomRefId="jme3-lib-jglfont-core-pom" file="${build.dir}/maven-pom/jme3-lib-jglfont-core-pom.xml"/>
         <artifact:pom id="jme3-lib-jglfont-core-pom" file="${build.dir}/maven-pom/jme3-lib-jglfont-core-pom.xml"/>
         <artifact:deploy file="lib/niftygui/jglfont-core.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-jglfont-core-pom"/>
             <attach file="lib/niftygui/jglfont-core-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
@@ -724,185 +723,185 @@
         <artifact:writepom pomRefId="jme3-lib-xmlpull-xpp3-pom" file="${build.dir}/maven-pom/jme3-lib-xmlpull-xpp3-pom.xml"/>
         <artifact:pom id="jme3-lib-xmlpull-xpp3-pom" file="${build.dir}/maven-pom/jme3-lib-xmlpull-xpp3-pom.xml"/>
         <artifact:deploy file="lib/niftygui/xmlpull-xpp3.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-xmlpull-xpp3-pom"/>
         </artifact:deploy>
         
         <echo>Creating jME3 natives maven repo files</echo>
         
-        <artifact:pom id="jme3-bullet-natives-pom" artifactId="jme3-bullet-natives" name="jme3-bullet-natives" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-bullet-natives-pom" artifactId="jme3-bullet-natives" name="jme3-bullet-natives" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-bullet-natives-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-pom.xml"/>
         <artifact:pom id="jme3-bullet-natives-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-pom.xml"/>
         <artifact:deploy file="lib/bullet/jME3-bullet-natives.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-bullet-natives-pom"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-bullet-natives-android-pom" artifactId="jme3-bullet-natives-android" name="jme3-bullet-natives-android" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-bullet-natives-android-pom" artifactId="jme3-bullet-natives-android" name="jme3-bullet-natives-android" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-bullet-natives-android-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-android-pom.xml"/>
         <artifact:pom id="jme3-bullet-natives-android-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-android-pom.xml"/>
         <artifact:deploy file="lib/bullet/jME3-bullet-natives-android.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-bullet-natives-android-pom"/>
         </artifact:deploy>
         
-        <artifact:pom id="jme3-openal-soft-pom" artifactId="jme3-openal-soft-android" name="jme3-openal-soft-android" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-openal-soft-pom" artifactId="jme3-openal-soft-android" name="jme3-openal-soft-android" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-openal-soft-pom" file="${build.dir}/maven-pom/jme3-openal-soft-pom.xml"/>
         <artifact:pom id="jme3-openal-soft-pom" file="${build.dir}/maven-pom/jme3-openal-soft-pom.xml"/>
         <artifact:deploy file="lib/openal-soft/jME3-openal-soft-natives-android.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-openal-soft-pom"/>
         </artifact:deploy>
 
         <echo>Creating jME3 maven repo files</echo>
         
-        <artifact:pom id="jme3-core-pom" artifactId="jme3-core" name="jme3-core" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-core-pom" artifactId="jme3-core" name="jme3-core" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-core-pom" file="${build.dir}/maven-pom/jme3-core-pom.xml"/>
         <artifact:pom id="jme3-core-pom" file="${build.dir}/maven-pom/jme3-core-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-core.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-core-pom"/>
             <attach file="${build.dir}/jME3-core-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-core-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-effects-pom" artifactId="jme3-effects" name="jme3-effects" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-effects-pom" artifactId="jme3-effects" name="jme3-effects" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-effects-pom" file="${build.dir}/maven-pom/jme3-effects-pom.xml"/>
         <artifact:pom id="jme3-effects-pom" file="${build.dir}/maven-pom/jme3-effects-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-effects.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-effects-pom"/>
             <attach file="${build.dir}/jME3-effects-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-effects-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-networking-pom" artifactId="jme3-networking" name="jme3-networking" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-networking-pom" artifactId="jme3-networking" name="jme3-networking" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-networking-pom" file="${build.dir}/maven-pom/jme3-networking-pom.xml"/>
         <artifact:pom id="jme3-networking-pom" file="${build.dir}/maven-pom/jme3-networking-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-networking.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-networking-pom"/>
             <attach file="${build.dir}/jME3-networking-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-networking-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-plugins-pom" artifactId="jme3-plugins" name="jme3-plugins" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-plugins-pom" artifactId="jme3-plugins" name="jme3-plugins" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-plugins-pom" file="${build.dir}/maven-pom/jme3-plugins-pom.xml"/>
         <artifact:pom id="jme3-plugins-pom" file="${build.dir}/maven-pom/jme3-plugins-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-plugins.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-plugins-pom"/>
             <attach file="${build.dir}/jME3-plugins-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-plugins-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-jogg-pom" artifactId="jme3-jogg" name="jme3-jogg" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-jogg-pom" artifactId="jme3-jogg" name="jme3-jogg" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
             <dependency groupId="com.jme3-lib" artifactId="oggd" version="1.0.0"/>
             <dependency groupId="com.jme3-lib" artifactId="vorbisd" version="1.0.0"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-jogg-pom" file="${build.dir}/maven-pom/jme3-jogg-pom.xml"/>
         <artifact:pom id="jme3-jogg-pom" file="${build.dir}/maven-pom/jme3-jogg-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-jogg.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-jogg-pom"/>
             <attach file="${build.dir}/jME3-jogg-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-jogg-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-desktop-pom" artifactId="jme3-desktop" name="jme3-desktop" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-desktop-pom" artifactId="jme3-desktop" name="jme3-desktop" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-desktop-pom" file="${build.dir}/maven-pom/jme3-desktop-pom.xml"/>
         <artifact:pom id="jme3-desktop-pom" file="${build.dir}/maven-pom/jme3-desktop-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-desktop.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-desktop-pom"/>
             <attach file="${build.dir}/jME3-desktop-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-desktop-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-blender-pom" artifactId="jme3-blender" name="jme3-blender" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-blender-pom" artifactId="jme3-blender" name="jme3-blender" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
-            <dependency groupId="com.jme3" artifactId="jme3-plugins" version="${plugins.version}"/>
-            <dependency groupId="com.jme3" artifactId="jme3-desktop" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-plugins" version="${jme.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-desktop" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-blender-pom" file="${build.dir}/maven-pom/jme3-blender-pom.xml"/>
         <artifact:pom id="jme3-blender-pom" file="${build.dir}/maven-pom/jme3-blender-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-blender.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-blender-pom"/>
             <attach file="${build.dir}/jME3-blender-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-blender-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-terrain-pom" artifactId="jme3-terrain" name="jme3-terrain" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-terrain-pom" artifactId="jme3-terrain" name="jme3-terrain" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-terrain-pom" file="${build.dir}/maven-pom/jme3-terrain-pom.xml"/>
         <artifact:pom id="jme3-terrain-pom" file="${build.dir}/maven-pom/jme3-terrain-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-terrain.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-terrain-pom"/>
             <attach file="${build.dir}/jME3-terrain-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-terrain-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-jbullet-pom" artifactId="jme3-jbullet" name="jme3-jbullet" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-jbullet-pom" artifactId="jme3-jbullet" name="jme3-jbullet" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
-            <dependency groupId="com.jme3" artifactId="jme3-terrain" version="${plugins.version}"/>
-            <dependency groupId="com.jme3-lib" artifactId="jbullet" version="${plugins.version}-jme"/>
-            <dependency groupId="com.jme3-lib" artifactId="stack-alloc" version="${plugins.version}-jme"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-terrain" version="${jme.version}"/>
+            <dependency groupId="com.jme3-lib" artifactId="jbullet" version="${jme.version}-jme"/>
+            <dependency groupId="com.jme3-lib" artifactId="stack-alloc" version="${jme.version}-jme"/>
             <dependency groupId="com.jme3-lib" artifactId="vecmath" version="1.3.1"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-jbullet-pom" file="${build.dir}/maven-pom/jme3-jbullet-pom.xml"/>
         <artifact:pom id="jme3-jbullet-pom" file="${build.dir}/maven-pom/jme3-jbullet-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-jbullet.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-jbullet-pom"/>
             <attach file="${build.dir}/jME3-jbullet-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-jbullet-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-bullet-pom" artifactId="jme3-bullet" name="jme3-bullet" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-bullet-pom" artifactId="jme3-bullet" name="jme3-bullet" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
-            <!--dependency groupId="com.jme3" artifactId="jme3-bullet-natives" version="${plugins.version}"/-->
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
+            <!--dependency groupId="com.jme3" artifactId="jme3-bullet-natives" version="${jme.version}"/-->
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-bullet-pom" file="${build.dir}/maven-pom/jme3-bullet-pom.xml"/>
         <artifact:pom id="jme3-bullet-pom" file="${build.dir}/maven-pom/jme3-bullet-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-bullet.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-bullet-pom"/>
             <attach file="${build.dir}/jME3-bullet-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-bullet-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-niftygui-pom" artifactId="jme3-niftygui" name="jme3-niftygui" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-niftygui-pom" artifactId="jme3-niftygui" name="jme3-niftygui" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
             <dependency groupId="com.jme3-lib" artifactId="nifty" version="1.3.3"/>
             <dependency groupId="com.jme3-lib" artifactId="nifty-default-controls" version="1.3.3"/>
             <dependency groupId="com.jme3-lib" artifactId="nifty-style-black" version="1.3.3"/>
@@ -912,16 +911,16 @@
         <artifact:writepom pomRefId="jme3-niftygui-pom" file="${build.dir}/maven-pom/jme3-niftygui-pom.xml"/>
         <artifact:pom id="jme3-niftygui-pom" file="${build.dir}/maven-pom/jme3-niftygui-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-niftygui.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-niftygui-pom"/>
             <attach file="${build.dir}/jME3-niftygui-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-niftygui-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
         
-        <artifact:pom id="jme3-lwjgl-pom" artifactId="jme3-lwjgl" name="jme3-lwjgl" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-lwjgl-pom" artifactId="jme3-lwjgl" name="jme3-lwjgl" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
-            <dependency groupId="com.jme3" artifactId="jme3-desktop" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-desktop" version="${jme.version}"/>
             <dependency groupId="com.jme3-lib" artifactId="lwjgl" version="2.9.0"/>
             <dependency groupId="com.jme3-lib" artifactId="jinput" version="2.0.0-b01"/>
             <dependency groupId="com.jme3-lib" artifactId="lwjgl-natives" version="2.9.0"/>
@@ -929,34 +928,34 @@
         <artifact:writepom pomRefId="jme3-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lwjgl-pom.xml"/>
         <artifact:pom id="jme3-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lwjgl-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-lwjgl.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lwjgl-pom"/>
             <attach file="${build.dir}/jME3-lwjgl-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-lwjgl-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-android-pom" artifactId="jme3-android" name="jme3-android" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-android-pom" artifactId="jme3-android" name="jme3-android" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
-            <dependency groupId="com.jme3" artifactId="jme3-openal-soft-android" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-openal-soft-android" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-android-pom" file="${build.dir}/maven-pom/jme3-android-pom.xml"/>
         <artifact:pom id="jme3-android-pom" file="${build.dir}/maven-pom/jme3-android-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-android.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-android-pom"/>
             <attach file="${build.dir}/jME3-android-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-android-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
 
-        <artifact:pom id="jme3-ios-pom" artifactId="jme3-ios" name="jme3-ios" groupId="com.jme3" version="${plugins.version}">
+        <artifact:pom id="jme3-ios-pom" artifactId="jme3-ios" name="jme3-ios" groupId="com.jme3" version="${jme.version}">
             <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
-            <dependency groupId="com.jme3" artifactId="jme3-core" version="${plugins.version}"/>
+            <dependency groupId="com.jme3" artifactId="jme3-core" version="${jme.version}"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-ios-pom" file="${build.dir}/maven-pom/jme3-ios-pom.xml"/>
         <artifact:pom id="jme3-ios-pom" file="${build.dir}/maven-pom/jme3-ios-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-ios.jar">
-            <remoteRepository refid="nexus.drkblu"/> 
+            <remoteRepository refid="nexus"/> 
             <pom refid="jme3-ios-pom"/>
             <attach file="${build.dir}/jME3-ios-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-ios-javadoc.jar" type="jar" classifier="javadoc"/>
