@@ -587,13 +587,20 @@
 
         <echo>Creating jME3 dependencies maven repo files</echo>
         
+		<artifact:install-provider artifactId="wagon-http" version="2.0"/>
+		
+		<artifact:remoteRepository id="nexus.drkblu" url="${maven.deploy.url}"> 
+			<releases enabled="true"/> 
+			<snapshots enabled="false"/> 
+		</artifact:remoteRepository> 		
+		
         <artifact:pom id="jme3-lib-lwjgl-pom" artifactId="lwjgl" name="lwjgl" groupId="com.jme3-lib" version="2.9.0">
             <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-pom.xml"/>
         <artifact:pom id="jme3-lib-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-pom.xml"/>
         <artifact:deploy file="lib/lwjgl/lwjgl.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+			<remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-lwjgl-pom"/>
         </artifact:deploy>
         
@@ -603,7 +610,7 @@
         <artifact:writepom pomRefId="jme3-lib-jinput-pom" file="${build.dir}/maven-pom/jme3-lib-jinput-pom.xml"/>
         <artifact:pom id="jme3-lib-jinput-pom" file="${build.dir}/maven-pom/jme3-lib-jinput-pom.xml"/>
         <artifact:deploy file="lib/lwjgl/jinput.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-jinput-pom"/>
         </artifact:deploy>
         
@@ -613,7 +620,7 @@
         <artifact:writepom pomRefId="jme3-lib-lwjgl-natives-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-natives-pom.xml"/>
         <artifact:pom id="jme3-lib-lwjgl-natives-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-natives-pom.xml"/>
         <artifact:deploy file="lib/lwjgl/jME3-lwjgl-natives.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-lwjgl-natives-pom"/>
         </artifact:deploy>
         
@@ -623,7 +630,7 @@
         <artifact:writepom pomRefId="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
         <artifact:pom id="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
         <artifact:deploy file="lib/jbullet/jbullet.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-jbullet-pom"/>
         </artifact:deploy>
         
@@ -633,7 +640,7 @@
         <artifact:writepom pomRefId="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
         <artifact:pom id="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
         <artifact:deploy file="lib/jbullet/stack-alloc.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-stack-alloc-pom"/>
         </artifact:deploy>
 
@@ -643,7 +650,7 @@
         <artifact:writepom pomRefId="jme3-lib-vecmath-pom" file="${build.dir}/maven-pom/jme3-lib-vecmath-pom.xml"/>
         <artifact:pom id="jme3-lib-vecmath-pom" file="${build.dir}/maven-pom/jme3-lib-vecmath-pom.xml"/>
         <artifact:deploy file="lib/jbullet/vecmath.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-vecmath-pom"/>
         </artifact:deploy>
 
@@ -653,7 +660,7 @@
         <artifact:writepom pomRefId="jme3-lib-oggd-pom" file="${build.dir}/maven-pom/jme3-lib-oggd-pom.xml"/>
         <artifact:pom id="jme3-lib-oggd-pom" file="${build.dir}/maven-pom/jme3-lib-oggd-pom.xml"/>
         <artifact:deploy file="lib/jogg/j-ogg-oggd.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-oggd-pom"/>
         </artifact:deploy>
 
@@ -663,7 +670,7 @@
         <artifact:writepom pomRefId="jme3-lib-vorbisd-pom" file="${build.dir}/maven-pom/jme3-lib-vorbisd-pom.xml"/>
         <artifact:pom id="jme3-lib-vorbisd-pom" file="${build.dir}/maven-pom/jme3-lib-vorbisd-pom.xml"/>
         <artifact:deploy file="lib/jogg/j-ogg-vorbisd.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-vorbisd-pom"/>
         </artifact:deploy>
 
@@ -673,7 +680,7 @@
         <artifact:writepom pomRefId="jme3-lib-nifty-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-pom.xml"/>
         <artifact:deploy file="lib/niftygui/nifty.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-nifty-pom"/>
             <attach file="lib/niftygui/nifty-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
@@ -684,7 +691,7 @@
         <artifact:writepom pomRefId="jme3-lib-nifty-default-controls-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-default-controls-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-default-controls-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-default-controls-pom.xml"/>
         <artifact:deploy file="lib/niftygui/nifty-default-controls.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-nifty-default-controls-pom"/>
             <attach file="lib/niftygui/nifty-default-controls-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
@@ -695,7 +702,7 @@
         <artifact:writepom pomRefId="jme3-lib-nifty-style-black-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-style-black-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-style-black-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-style-black-pom.xml"/>
         <artifact:deploy file="lib/niftygui/nifty-style-black.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-nifty-style-black-pom"/>
         </artifact:deploy>
 
@@ -705,7 +712,7 @@
         <artifact:writepom pomRefId="jme3-lib-jglfont-core-pom" file="${build.dir}/maven-pom/jme3-lib-jglfont-core-pom.xml"/>
         <artifact:pom id="jme3-lib-jglfont-core-pom" file="${build.dir}/maven-pom/jme3-lib-jglfont-core-pom.xml"/>
         <artifact:deploy file="lib/niftygui/jglfont-core.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-jglfont-core-pom"/>
             <attach file="lib/niftygui/jglfont-core-javadoc.jar" type="jar" classifier="javadoc"/>
         </artifact:deploy>
@@ -716,7 +723,7 @@
         <artifact:writepom pomRefId="jme3-lib-xmlpull-xpp3-pom" file="${build.dir}/maven-pom/jme3-lib-xmlpull-xpp3-pom.xml"/>
         <artifact:pom id="jme3-lib-xmlpull-xpp3-pom" file="${build.dir}/maven-pom/jme3-lib-xmlpull-xpp3-pom.xml"/>
         <artifact:deploy file="lib/niftygui/xmlpull-xpp3.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lib-xmlpull-xpp3-pom"/>
         </artifact:deploy>
         
@@ -728,7 +735,7 @@
         <artifact:writepom pomRefId="jme3-bullet-natives-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-pom.xml"/>
         <artifact:pom id="jme3-bullet-natives-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-pom.xml"/>
         <artifact:deploy file="lib/bullet/jME3-bullet-natives.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-bullet-natives-pom"/>
         </artifact:deploy>
 
@@ -738,7 +745,7 @@
         <artifact:writepom pomRefId="jme3-bullet-natives-android-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-android-pom.xml"/>
         <artifact:pom id="jme3-bullet-natives-android-pom" file="${build.dir}/maven-pom/jme3-bullet-natives-android-pom.xml"/>
         <artifact:deploy file="lib/bullet/jME3-bullet-natives-android.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-bullet-natives-android-pom"/>
         </artifact:deploy>
         
@@ -748,7 +755,7 @@
         <artifact:writepom pomRefId="jme3-openal-soft-pom" file="${build.dir}/maven-pom/jme3-openal-soft-pom.xml"/>
         <artifact:pom id="jme3-openal-soft-pom" file="${build.dir}/maven-pom/jme3-openal-soft-pom.xml"/>
         <artifact:deploy file="lib/openal-soft/jME3-openal-soft-natives-android.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-openal-soft-pom"/>
         </artifact:deploy>
 
@@ -760,7 +767,7 @@
         <artifact:writepom pomRefId="jme3-core-pom" file="${build.dir}/maven-pom/jme3-core-pom.xml"/>
         <artifact:pom id="jme3-core-pom" file="${build.dir}/maven-pom/jme3-core-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-core.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-core-pom"/>
             <attach file="${build.dir}/jME3-core-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-core-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -773,7 +780,7 @@
         <artifact:writepom pomRefId="jme3-effects-pom" file="${build.dir}/maven-pom/jme3-effects-pom.xml"/>
         <artifact:pom id="jme3-effects-pom" file="${build.dir}/maven-pom/jme3-effects-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-effects.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-effects-pom"/>
             <attach file="${build.dir}/jME3-effects-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-effects-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -786,7 +793,7 @@
         <artifact:writepom pomRefId="jme3-networking-pom" file="${build.dir}/maven-pom/jme3-networking-pom.xml"/>
         <artifact:pom id="jme3-networking-pom" file="${build.dir}/maven-pom/jme3-networking-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-networking.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-networking-pom"/>
             <attach file="${build.dir}/jME3-networking-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-networking-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -799,7 +806,7 @@
         <artifact:writepom pomRefId="jme3-plugins-pom" file="${build.dir}/maven-pom/jme3-plugins-pom.xml"/>
         <artifact:pom id="jme3-plugins-pom" file="${build.dir}/maven-pom/jme3-plugins-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-plugins.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-plugins-pom"/>
             <attach file="${build.dir}/jME3-plugins-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-plugins-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -814,7 +821,7 @@
         <artifact:writepom pomRefId="jme3-jogg-pom" file="${build.dir}/maven-pom/jme3-jogg-pom.xml"/>
         <artifact:pom id="jme3-jogg-pom" file="${build.dir}/maven-pom/jme3-jogg-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-jogg.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-jogg-pom"/>
             <attach file="${build.dir}/jME3-jogg-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-jogg-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -827,7 +834,7 @@
         <artifact:writepom pomRefId="jme3-desktop-pom" file="${build.dir}/maven-pom/jme3-desktop-pom.xml"/>
         <artifact:pom id="jme3-desktop-pom" file="${build.dir}/maven-pom/jme3-desktop-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-desktop.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-desktop-pom"/>
             <attach file="${build.dir}/jME3-desktop-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-desktop-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -842,7 +849,7 @@
         <artifact:writepom pomRefId="jme3-blender-pom" file="${build.dir}/maven-pom/jme3-blender-pom.xml"/>
         <artifact:pom id="jme3-blender-pom" file="${build.dir}/maven-pom/jme3-blender-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-blender.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-blender-pom"/>
             <attach file="${build.dir}/jME3-blender-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-blender-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -855,7 +862,7 @@
         <artifact:writepom pomRefId="jme3-terrain-pom" file="${build.dir}/maven-pom/jme3-terrain-pom.xml"/>
         <artifact:pom id="jme3-terrain-pom" file="${build.dir}/maven-pom/jme3-terrain-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-terrain.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-terrain-pom"/>
             <attach file="${build.dir}/jME3-terrain-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-terrain-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -872,7 +879,7 @@
         <artifact:writepom pomRefId="jme3-jbullet-pom" file="${build.dir}/maven-pom/jme3-jbullet-pom.xml"/>
         <artifact:pom id="jme3-jbullet-pom" file="${build.dir}/maven-pom/jme3-jbullet-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-jbullet.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-jbullet-pom"/>
             <attach file="${build.dir}/jME3-jbullet-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-jbullet-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -886,7 +893,7 @@
         <artifact:writepom pomRefId="jme3-bullet-pom" file="${build.dir}/maven-pom/jme3-bullet-pom.xml"/>
         <artifact:pom id="jme3-bullet-pom" file="${build.dir}/maven-pom/jme3-bullet-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-bullet.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-bullet-pom"/>
             <attach file="${build.dir}/jME3-bullet-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-bullet-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -904,7 +911,7 @@
         <artifact:writepom pomRefId="jme3-niftygui-pom" file="${build.dir}/maven-pom/jme3-niftygui-pom.xml"/>
         <artifact:pom id="jme3-niftygui-pom" file="${build.dir}/maven-pom/jme3-niftygui-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-niftygui.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-niftygui-pom"/>
             <attach file="${build.dir}/jME3-niftygui-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-niftygui-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -921,7 +928,7 @@
         <artifact:writepom pomRefId="jme3-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lwjgl-pom.xml"/>
         <artifact:pom id="jme3-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lwjgl-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-lwjgl.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-lwjgl-pom"/>
             <attach file="${build.dir}/jME3-lwjgl-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-lwjgl-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -935,7 +942,7 @@
         <artifact:writepom pomRefId="jme3-android-pom" file="${build.dir}/maven-pom/jme3-android-pom.xml"/>
         <artifact:pom id="jme3-android-pom" file="${build.dir}/maven-pom/jme3-android-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-android.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-android-pom"/>
             <attach file="${build.dir}/jME3-android-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-android-javadoc.jar" type="jar" classifier="javadoc"/>
@@ -948,7 +955,7 @@
         <artifact:writepom pomRefId="jme3-ios-pom" file="${build.dir}/maven-pom/jme3-ios-pom.xml"/>
         <artifact:pom id="jme3-ios-pom" file="${build.dir}/maven-pom/jme3-ios-pom.xml"/>
         <artifact:deploy file="${build.dir}/jME3-ios.jar">
-            <remoteRepository url="${maven.deploy.url}"/>
+            <remoteRepository refid="nexus.drkblu"/> 
             <pom refid="jme3-ios-pom"/>
             <attach file="${build.dir}/jME3-ios-sources.jar" type="jar" classifier="sources"/>
             <attach file="${build.dir}/jME3-ios-javadoc.jar" type="jar" classifier="javadoc"/>
