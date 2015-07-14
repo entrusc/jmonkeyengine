@@ -31,7 +31,8 @@
  */
 package com.jme3.texture;
 
-import com.jme3.texture.Image;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 /**
  * An image implementation that has additional
@@ -43,6 +44,29 @@ import com.jme3.texture.Image;
  * @author Florian Frankenberger
  */
 public abstract class LowLevelImage extends Image {
+
+    public LowLevelImage() {
+    }
+
+    public LowLevelImage(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data, int[] mipMapSizes) {
+        super(format, width, height, depth, data, mipMapSizes);
+    }
+
+    public LowLevelImage(Format format, int width, int height, ByteBuffer data, int[] mipMapSizes) {
+        super(format, width, height, data, mipMapSizes);
+    }
+
+    public LowLevelImage(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data) {
+        super(format, width, height, depth, data);
+    }
+
+    public LowLevelImage(Format format, int width, int height, ByteBuffer data) {
+        super(format, width, height, data);
+    }
+
+    protected LowLevelImage(int id) {
+        super(id);
+    }
 
     /**
      * called instead of the engine's default image update
