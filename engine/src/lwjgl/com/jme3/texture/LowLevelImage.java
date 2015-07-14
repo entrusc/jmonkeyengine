@@ -68,6 +68,8 @@ public abstract class LowLevelImage extends Image {
         super(id);
     }
 
+    public abstract void bind(int unit);
+    
     /**
      * called instead of the engine's default image update
      * mechanism, after the image is bound and set active
