@@ -1833,7 +1833,6 @@ public class LwjglRenderer implements Renderer {
         // LowLevelImage implementors upload/update their image on their own
         if (img instanceof LowLevelImage) {
             final LowLevelImage lowLevelImage = (LowLevelImage) img;
-            lowLevelImage.bind(unit);
             lowLevelImage.updateImageData(newImage);
         } else {
 
