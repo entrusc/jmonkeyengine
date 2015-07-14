@@ -51,11 +51,11 @@ import com.jme3.shader.Uniform;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.FrameBuffer.RenderBuffer;
 import com.jme3.texture.Image;
+import com.jme3.texture.LowLevelImage;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapAxis;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.ListMap;
-import com.jme3.util.NativeObject;
 import com.jme3.util.NativeObjectManager;
 import com.jme3.util.SafeArrayList;
 import java.nio.*;
@@ -499,10 +499,10 @@ public class LwjglRenderer implements Renderer {
             context.alphaTestEnabled = false;
         }
         if (state.getAlphaFallOff() != context.alphaTestFallOff) {
-            glAlphaFunc(GL_GREATER, context.alphaTestFallOff);   
+            glAlphaFunc(GL_GREATER, context.alphaTestFallOff);
             context.alphaTestFallOff = state.getAlphaFallOff();
         }
-        
+
         if (state.isDepthWrite() && !context.depthWriteEnabled) {
             glDepthMask(true);
             context.depthWriteEnabled = true;
@@ -1760,7 +1760,7 @@ public class LwjglRenderer implements Renderer {
         if (context.pointSprite) {
             return; // Attempt to fix glTexParameter crash for some ATI GPUs
         }
-        
+
         // repeat modes
         switch (tex.getType()) {
             case ThreeDimensional:
@@ -1782,7 +1782,7 @@ public class LwjglRenderer implements Renderer {
             // R to Texture compare mode
             if (tex.getShadowCompareMode() != Texture.ShadowCompareMode.Off) {
                 glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-                glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);            
+                glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
                 if (tex.getShadowCompareMode() == Texture.ShadowCompareMode.GreaterOrEqual) {
                     glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
                 } else {
@@ -1790,7 +1790,7 @@ public class LwjglRenderer implements Renderer {
                 }
             }else{
                  //restoring default value
-                 glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_NONE);          
+                 glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
             }
             tex.compareModeUpdated();
         }
@@ -1798,13 +1798,14 @@ public class LwjglRenderer implements Renderer {
 
     /**
      * Uploads the given image to the GL driver.
-     * 
+     *
      * @param img The image to upload
      * @param type How the data in the image argument should be interpreted.
      * @param unit The texture slot to be used to upload the image, not important
      */
     public void updateTexImageData(Image img, Texture.Type type, int unit) {
         int texId = img.getId();
+        boolean newImage = false;
         if (texId == -1) {
             // create texture
             glGenTextures(intBuf1);
@@ -1813,9 +1814,10 @@ public class LwjglRenderer implements Renderer {
             objManager.registerObject(img);
 
             statistics.onNewTexture();
+            newImage = true;
         }
 
-        // bind texture       
+        // bind texture
         int target = convertTextureType(type, img.getMultiSamples(), -1);
         if (context.boundTextureUnit != unit) {
             glActiveTexture(GL_TEXTURE0 + unit);
@@ -1828,102 +1830,109 @@ public class LwjglRenderer implements Renderer {
             statistics.onTextureUse(img, true);
         }
 
-        if (!img.hasMipmaps() && img.isGeneratedMipmapsRequired()) {
-            // No pregenerated mips available,
-            // generate from base level if required
-            if (!GLContext.getCapabilities().OpenGL30) {
-                glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE);
-                img.setMipmapsGenerated(true);
-            }
+        // LowLevelImage implementors upload/update their image on their own
+        if (img instanceof LowLevelImage) {
+            final LowLevelImage lowLevelImage = (LowLevelImage) img;
+            lowLevelImage.updateImageData(newImage);
         } else {
-            // Image already has mipmaps or no mipmap generation desired.
-//          glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0 );
-            if (img.getMipMapSizes() != null) {
-                glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, img.getMipMapSizes().length - 1);
-            }
-        }
 
-        int imageSamples = img.getMultiSamples();
-        if (imageSamples > 1) {
-            if (img.getFormat().isDepthFormat()) {
-                img.setMultiSamples(Math.min(maxDepthTexSamples, imageSamples));
+            if (!img.hasMipmaps() && img.isGeneratedMipmapsRequired()) {
+                // No pregenerated mips available,
+                // generate from base level if required
+                if (!GLContext.getCapabilities().OpenGL30) {
+                    glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE);
+                    img.setMipmapsGenerated(true);
+                }
             } else {
-                img.setMultiSamples(Math.min(maxColorTexSamples, imageSamples));
+                // Image already has mipmaps or no mipmap generation desired.
+    //          glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0 );
+                if (img.getMipMapSizes() != null) {
+                    glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, img.getMipMapSizes().length - 1);
+                }
             }
-        }
 
-        // Yes, some OpenGL2 cards (GeForce 5) still dont support NPOT.
-        if (!GLContext.getCapabilities().GL_ARB_texture_non_power_of_two) {
-            if (img.getWidth() != 0 && img.getHeight() != 0) {
-                if (!FastMath.isPowerOfTwo(img.getWidth())
-                        || !FastMath.isPowerOfTwo(img.getHeight())) {
-                    if (img.getData(0) == null) {
-                        throw new RendererException("non-power-of-2 framebuffer textures are not supported by the video hardware");
-                    } else {
-                        MipMapGenerator.resizeToPowerOf2(img);
+            int imageSamples = img.getMultiSamples();
+            if (imageSamples > 1) {
+                if (img.getFormat().isDepthFormat()) {
+                    img.setMultiSamples(Math.min(maxDepthTexSamples, imageSamples));
+                } else {
+                    img.setMultiSamples(Math.min(maxColorTexSamples, imageSamples));
+                }
+            }
+
+            // Yes, some OpenGL2 cards (GeForce 5) still dont support NPOT.
+            if (!GLContext.getCapabilities().GL_ARB_texture_non_power_of_two) {
+                if (img.getWidth() != 0 && img.getHeight() != 0) {
+                    if (!FastMath.isPowerOfTwo(img.getWidth())
+                            || !FastMath.isPowerOfTwo(img.getHeight())) {
+                        if (img.getData(0) == null) {
+                            throw new RendererException("non-power-of-2 framebuffer textures are not supported by the video hardware");
+                        } else {
+                            MipMapGenerator.resizeToPowerOf2(img);
+                        }
                     }
                 }
             }
-        }
 
-        // Check if graphics card doesn't support multisample textures
-        if (!GLContext.getCapabilities().GL_ARB_texture_multisample) {
-            if (img.getMultiSamples() > 1) {
-                throw new RendererException("Multisample textures not supported by graphics hardware");
+            // Check if graphics card doesn't support multisample textures
+            if (!GLContext.getCapabilities().GL_ARB_texture_multisample) {
+                if (img.getMultiSamples() > 1) {
+                    throw new RendererException("Multisample textures not supported by graphics hardware");
+                }
             }
-        }
-        
-        if (target == GL_TEXTURE_CUBE_MAP) {
-            // Check max texture size before upload
-            if (img.getWidth() > maxCubeTexSize || img.getHeight() > maxCubeTexSize) {
-                throw new RendererException("Cannot upload cubemap " + img + ". The maximum supported cubemap resolution is " + maxCubeTexSize);
-            }
-        } else {
-            if (img.getWidth() > maxTexSize || img.getHeight() > maxTexSize) {
-                throw new RendererException("Cannot upload texture " + img + ". The maximum supported texture resolution is " + maxTexSize);
-            }
-        }
 
-        if (target == GL_TEXTURE_CUBE_MAP) {
-            List<ByteBuffer> data = img.getData();
-            if (data.size() != 6) {
-                logger.log(Level.WARNING, "Invalid texture: {0}\n"
-                        + "Cubemap textures must contain 6 data units.", img);
-                return;
+            if (target == GL_TEXTURE_CUBE_MAP) {
+                // Check max texture size before upload
+                if (img.getWidth() > maxCubeTexSize || img.getHeight() > maxCubeTexSize) {
+                    throw new RendererException("Cannot upload cubemap " + img + ". The maximum supported cubemap resolution is " + maxCubeTexSize);
+                }
+            } else {
+                if (img.getWidth() > maxTexSize || img.getHeight() > maxTexSize) {
+                    throw new RendererException("Cannot upload texture " + img + ". The maximum supported texture resolution is " + maxTexSize);
+                }
             }
-            for (int i = 0; i < 6; i++) {
-                TextureUtil.uploadTexture(img, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, i, 0);
-            }
-        } else if (target == EXTTextureArray.GL_TEXTURE_2D_ARRAY_EXT) {
-            if (!caps.contains(Caps.TextureArray)) {
-                throw new RendererException("Texture arrays not supported by graphics hardware");
-            }
-            
-            List<ByteBuffer> data = img.getData();
-            
-            // -1 index specifies prepare data for 2D Array
-            TextureUtil.uploadTexture(img, target, -1, 0);
-            
-            for (int i = 0; i < data.size(); i++) {
-                // upload each slice of 2D array in turn
-                // this time with the appropriate index
-                TextureUtil.uploadTexture(img, target, i, 0);
-            }
-        } else {
-            TextureUtil.uploadTexture(img, target, 0, 0);
-        }
 
-        if (img.getMultiSamples() != imageSamples) {
-            img.setMultiSamples(imageSamples);
-        }
+            if (target == GL_TEXTURE_CUBE_MAP) {
+                List<ByteBuffer> data = img.getData();
+                if (data.size() != 6) {
+                    logger.log(Level.WARNING, "Invalid texture: {0}\n"
+                            + "Cubemap textures must contain 6 data units.", img);
+                    return;
+                }
+                for (int i = 0; i < 6; i++) {
+                    TextureUtil.uploadTexture(img, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, i, 0);
+                }
+            } else if (target == EXTTextureArray.GL_TEXTURE_2D_ARRAY_EXT) {
+                if (!caps.contains(Caps.TextureArray)) {
+                    throw new RendererException("Texture arrays not supported by graphics hardware");
+                }
 
-        if (GLContext.getCapabilities().OpenGL30) {
-            if (!img.hasMipmaps() && img.isGeneratedMipmapsRequired() && img.getData() != null) {
-                // XXX: Required for ATI
-                glEnable(target);
-                glGenerateMipmapEXT(target);
-                glDisable(target);
-                img.setMipmapsGenerated(true);
+                List<ByteBuffer> data = img.getData();
+
+                // -1 index specifies prepare data for 2D Array
+                TextureUtil.uploadTexture(img, target, -1, 0);
+
+                for (int i = 0; i < data.size(); i++) {
+                    // upload each slice of 2D array in turn
+                    // this time with the appropriate index
+                    TextureUtil.uploadTexture(img, target, i, 0);
+                }
+            } else {
+                TextureUtil.uploadTexture(img, target, 0, 0);
+            }
+
+            if (img.getMultiSamples() != imageSamples) {
+                img.setMultiSamples(imageSamples);
+            }
+
+            if (GLContext.getCapabilities().OpenGL30) {
+                if (!img.hasMipmaps() && img.isGeneratedMipmapsRequired() && img.getData() != null) {
+                    // XXX: Required for ATI
+                    glEnable(target);
+                    glGenerateMipmapEXT(target);
+                    glDisable(target);
+                    img.setMipmapsGenerated(true);
+                }
             }
         }
 
