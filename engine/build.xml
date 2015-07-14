@@ -729,7 +729,7 @@
             <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-xmlpull-xpp3-pom"/>
         </artifact:deploy>-->
-
+        
         <echo>Creating jME3 natives maven repo files</echo>
         
         <artifact:pom id="jme3-bullet-natives-pom" artifactId="jme3-bullet-natives" name="jme3-bullet-natives" groupId="com.jme3" version="${jme.version}">
