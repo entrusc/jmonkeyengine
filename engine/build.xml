@@ -584,18 +584,21 @@
             <fileset dir="${src.ios.dir}"/>
         </jar>
 
-        <echo>Creating jME3 dependencies maven repo files</echo>
+        <artifact:install-provider artifactId="wagon-http" version="2.0"/>
+
+        <artifact:remoteRepository id="nexus" url="${maven.deploy.url}"> 
+                <releases enabled="true"/> 
+                <snapshots enabled="false"/> 
+                <authentication username="${maven.deploy.username}" password="${maven.deploy.password}"/>
+        </artifact:remoteRepository> 	
+
+<!-- disabled because it suffices to push the dependencies once to the nexus, the other times
+     this will throw an error                                                                 -->
+     
+<!--        <echo>Creating jME3 dependencies maven repo files</echo>
         
-		<artifact:install-provider artifactId="wagon-http" version="2.0"/>
-		
-		<artifact:remoteRepository id="nexus" url="${maven.deploy.url}"> 
-			<releases enabled="true"/> 
-			<snapshots enabled="false"/> 
-			<authentication username="${maven.deploy.username}" password="${maven.deploy.password}"/>
-		</artifact:remoteRepository> 		
-		
         <artifact:pom id="jme3-lib-lwjgl-pom" artifactId="lwjgl" name="lwjgl" groupId="com.jme3-lib" version="2.9.0">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-pom.xml"/>
         <artifact:pom id="jme3-lib-lwjgl-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-pom.xml"/>
@@ -605,7 +608,7 @@
         </artifact:deploy>
         
         <artifact:pom id="jme3-lib-jinput-pom" artifactId="jinput" name="jinput" groupId="com.jme3-lib" version="2.0.0-b01">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-jinput-pom" file="${build.dir}/maven-pom/jme3-lib-jinput-pom.xml"/>
         <artifact:pom id="jme3-lib-jinput-pom" file="${build.dir}/maven-pom/jme3-lib-jinput-pom.xml"/>
@@ -615,7 +618,7 @@
         </artifact:deploy>
         
         <artifact:pom id="jme3-lib-lwjgl-natives-pom" artifactId="lwjgl-natives" name="lwjgl-natives" groupId="com.jme3-lib" version="2.9.0">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-lwjgl-natives-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-natives-pom.xml"/>
         <artifact:pom id="jme3-lib-lwjgl-natives-pom" file="${build.dir}/maven-pom/jme3-lib-lwjgl-natives-pom.xml"/>
@@ -625,7 +628,7 @@
         </artifact:deploy>
         
         <artifact:pom id="jme3-lib-jbullet-pom" artifactId="jbullet" name="jbullet" groupId="com.jme3-lib" version="${jme.version}-jme">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
         <artifact:pom id="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
@@ -635,7 +638,7 @@
         </artifact:deploy>
         
         <artifact:pom id="jme3-lib-stack-alloc-pom" artifactId="stack-alloc" name="stack-alloc" groupId="com.jme3-lib" version="${jme.version}-jme">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
         <artifact:pom id="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
@@ -645,7 +648,7 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-vecmath-pom" artifactId="vecmath" name="vecmath" groupId="com.jme3-lib" version="1.3.1">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-vecmath-pom" file="${build.dir}/maven-pom/jme3-lib-vecmath-pom.xml"/>
         <artifact:pom id="jme3-lib-vecmath-pom" file="${build.dir}/maven-pom/jme3-lib-vecmath-pom.xml"/>
@@ -655,7 +658,7 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-oggd-pom" artifactId="oggd" name="oggd" groupId="com.jme3-lib" version="1.0.0">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-oggd-pom" file="${build.dir}/maven-pom/jme3-lib-oggd-pom.xml"/>
         <artifact:pom id="jme3-lib-oggd-pom" file="${build.dir}/maven-pom/jme3-lib-oggd-pom.xml"/>
@@ -665,7 +668,7 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-vorbisd-pom" artifactId="vorbisd" name="vorbisd" groupId="com.jme3-lib" version="1.0.0">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-vorbisd-pom" file="${build.dir}/maven-pom/jme3-lib-vorbisd-pom.xml"/>
         <artifact:pom id="jme3-lib-vorbisd-pom" file="${build.dir}/maven-pom/jme3-lib-vorbisd-pom.xml"/>
@@ -675,7 +678,7 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-nifty-pom" artifactId="nifty" name="nifty" groupId="com.jme3-lib" version="1.3.3">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-nifty-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-pom.xml"/>
@@ -686,7 +689,7 @@
         </artifact:deploy>
         
         <artifact:pom id="jme3-lib-nifty-default-controls-pom" artifactId="nifty-default-controls" name="nifty-default-controls" groupId="com.jme3-lib" version="1.3.3">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-nifty-default-controls-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-default-controls-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-default-controls-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-default-controls-pom.xml"/>
@@ -697,7 +700,7 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-nifty-style-black-pom" artifactId="nifty-style-black" name="nifty-style-black" groupId="com.jme3-lib" version="1.3.3">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-nifty-style-black-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-style-black-pom.xml"/>
         <artifact:pom id="jme3-lib-nifty-style-black-pom" file="${build.dir}/maven-pom/jme3-lib-nifty-style-black-pom.xml"/>
@@ -707,7 +710,7 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-jglfont-core-pom" artifactId="jglfont-core" name="jglfont-core" groupId="com.jme3-lib" version="1.3">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-jglfont-core-pom" file="${build.dir}/maven-pom/jme3-lib-jglfont-core-pom.xml"/>
         <artifact:pom id="jme3-lib-jglfont-core-pom" file="${build.dir}/maven-pom/jme3-lib-jglfont-core-pom.xml"/>
@@ -718,15 +721,15 @@
         </artifact:deploy>
 
         <artifact:pom id="jme3-lib-xmlpull-xpp3-pom" artifactId="xmlpull-xpp3" name="xmlpull-xpp3" groupId="com.jme3-lib" version="1.4.4c">
-            <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
+            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-xmlpull-xpp3-pom" file="${build.dir}/maven-pom/jme3-lib-xmlpull-xpp3-pom.xml"/>
         <artifact:pom id="jme3-lib-xmlpull-xpp3-pom" file="${build.dir}/maven-pom/jme3-lib-xmlpull-xpp3-pom.xml"/>
         <artifact:deploy file="lib/niftygui/xmlpull-xpp3.jar">
             <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-xmlpull-xpp3-pom"/>
-        </artifact:deploy>
-        
+        </artifact:deploy>-->
+
         <echo>Creating jME3 natives maven repo files</echo>
         
         <artifact:pom id="jme3-bullet-natives-pom" artifactId="jme3-bullet-natives" name="jme3-bullet-natives" groupId="com.jme3" version="${jme.version}">
