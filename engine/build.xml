@@ -584,15 +584,20 @@
             <fileset dir="${src.ios.dir}"/>
         </jar>
 
+        <artifact:install-provider artifactId="wagon-http" version="2.0"/>
+
+        <artifact:remoteRepository id="nexus" url="${maven.deploy.url}"> 
+                <releases enabled="true"/> 
+                <snapshots enabled="false"/> 
+                <authentication username="${maven.deploy.username}" password="${maven.deploy.password}"/>
+        </artifact:remoteRepository> 	
+
+        <if>
+            <equals arg1="${maven.deploy.dependencies}" arg2="true" />
+            <then>
+
         <echo>Creating jME3 dependencies maven repo files</echo>
         
-		<artifact:install-provider artifactId="wagon-http" version="2.0"/>
-		
-		<artifact:remoteRepository id="nexus" url="${maven.deploy.url}"> 
-			<releases enabled="true"/> 
-			<snapshots enabled="false"/> 
-			<authentication username="${maven.deploy.username}" password="${maven.deploy.password}"/>
-		</artifact:remoteRepository> 		
 		
         <artifact:pom id="jme3-lib-lwjgl-pom" artifactId="lwjgl" name="lwjgl" groupId="com.jme3-lib" version="2.9.0">
             <!--license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/-->
@@ -726,6 +731,9 @@
             <remoteRepository refid="nexus"/> 
             <pom refid="jme3-lib-xmlpull-xpp3-pom"/>
         </artifact:deploy>
+        
+            </then>
+        </if>
         
         <echo>Creating jME3 natives maven repo files</echo>
         
