@@ -40,7 +40,9 @@ import com.jme3.math.Vector2f;
 import com.jme3.util.IntMap;
 import com.jme3.util.IntMap.Entry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -110,6 +112,7 @@ public class InputManager implements RawInputListener {
     private static class Mapping {
 
         private final String name;
+        private final List<Trigger> triggersRaw = new ArrayList<Trigger>();
         private final ArrayList<Integer> triggers = new ArrayList<Integer>();
         private final ArrayList<InputListener> listeners = new ArrayList<InputListener>();
 
@@ -324,28 +327,28 @@ public class InputManager implements RawInputListener {
         } else if (value < 0) {
             int hash = JoyAxisTrigger.joyAxisHash(joyId, axis, true);
             int otherHash = JoyAxisTrigger.joyAxisHash(joyId, axis, false);
-            
+
             // Clear the reverse direction's actions in case we
-            // crossed center too quickly            
+            // crossed center too quickly
             Float otherVal = axisValues.get(otherHash);
             if (otherVal != null && otherVal.floatValue() > axisDeadZone) {
                 invokeActions(otherHash, false);
             }
-            
+
             invokeAnalogsAndActions(hash, -value, true);
             axisValues.put(hash, -value);
             axisValues.remove(otherHash);
         } else {
             int hash = JoyAxisTrigger.joyAxisHash(joyId, axis, false);
             int otherHash = JoyAxisTrigger.joyAxisHash(joyId, axis, true);
-            
+
             // Clear the reverse direction's actions in case we
-            // crossed center too quickly            
+            // crossed center too quickly
             Float otherVal = axisValues.get(otherHash);
             if (otherVal != null && otherVal.floatValue() > axisDeadZone) {
                 invokeActions(otherHash, false);
             }
-            
+
             invokeAnalogsAndActions(hash, value, true);
             axisValues.put(hash, value);
             axisValues.remove(otherHash);
@@ -567,10 +570,19 @@ public class InputManager implements RawInputListener {
             if (!names.contains(mapping)) {
                 names.add(mapping);
                 mapping.triggers.add(hash);
+                mapping.triggersRaw.add(trigger);
             } else {
                 logger.log(Level.WARNING, "Attempted to add mapping \"{0}\" twice to trigger.", mappingName);
             }
         }
+    }
+
+    public List<Trigger> getTriggers(String mappingName) {
+        Mapping mapping = mappings.get(mappingName);
+        if (mapping != null) {
+            return Collections.unmodifiableList(mapping.triggersRaw);
+        }
+        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -633,6 +645,8 @@ public class InputManager implements RawInputListener {
         ArrayList<Mapping> maps = bindings.get(trigger.triggerHashCode());
         maps.remove(mapping);
 
+        mapping.triggersRaw.remove(trigger);
+        mapping.triggers.remove(trigger.triggerHashCode());
     }
 
     /**
