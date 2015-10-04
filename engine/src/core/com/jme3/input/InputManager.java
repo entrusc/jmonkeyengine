@@ -577,6 +577,12 @@ public class InputManager implements RawInputListener {
         }
     }
 
+    /**
+     * returns a list of associated triggers for the given mapping name
+     * 
+     * @param mappingName
+     * @return
+     */
     public List<Trigger> getTriggers(String mappingName) {
         Mapping mapping = mappings.get(mappingName);
         if (mapping != null) {
