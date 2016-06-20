@@ -40,6 +40,8 @@ import com.jme3.renderer.*;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.PartialUpdatedVertexBuffer;
+import com.jme3.scene.PartialUpdatedVertexBuffer.Update;
 import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.VertexBuffer.Usage;
@@ -2088,59 +2090,106 @@ public class LwjglRenderer implements Renderer {
         }
 
         int usage = convertUsage(vb.getUsage());
-        vb.getData().rewind();
 
         if (created || vb.hasDataSizeChanged()) {
-            // upload data based on format
-            switch (vb.getFormat()) {
-                case Byte:
-                case UnsignedByte:
-                    glBufferData(target, (ByteBuffer) vb.getData(), usage);
-                    break;
-                //            case Half:
-                case Short:
-                case UnsignedShort:
-                    glBufferData(target, (ShortBuffer) vb.getData(), usage);
-                    break;
-                case Int:
-                case UnsignedInt:
-                    glBufferData(target, (IntBuffer) vb.getData(), usage);
-                    break;
-                case Float:
-                    glBufferData(target, (FloatBuffer) vb.getData(), usage);
-                    break;
-                case Double:
-                    glBufferData(target, (DoubleBuffer) vb.getData(), usage);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown buffer format.");
-            }
+            initializeVertexData(vb, target, usage);
         } else {
+            if (vb instanceof PartialUpdatedVertexBuffer) {
+                PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
+                uploadVertexDataPartial(pvb, target);
+            } else {
+                uploadVertexDataFull(vb, target);
+            }
+        }
+
+        vb.clearUpdateNeeded();
+    }
+
+    private void uploadVertexDataPartial(PartialUpdatedVertexBuffer vb, int target) {
+        final List<Update> updates = vb.getAndClearUpdates();
+        final Buffer data = vb.getData();
+
+        //only transfer the changed parts to GPU
+        for (Update update : updates) {
+            data.position(update.getPos());
+            data.limit(update.getPos() + update.getLength());
             switch (vb.getFormat()) {
                 case Byte:
                 case UnsignedByte:
-                    glBufferSubData(target, 0, (ByteBuffer) vb.getData());
+                    glBufferSubData(target, 0, (ByteBuffer) data);
                     break;
                 case Short:
                 case UnsignedShort:
-                    glBufferSubData(target, 0, (ShortBuffer) vb.getData());
+                    glBufferSubData(target, 0, (ShortBuffer) data);
                     break;
                 case Int:
                 case UnsignedInt:
-                    glBufferSubData(target, 0, (IntBuffer) vb.getData());
+                    glBufferSubData(target, 0, (IntBuffer) data);
                     break;
                 case Float:
-                    glBufferSubData(target, 0, (FloatBuffer) vb.getData());
+                    glBufferSubData(target, 0, (FloatBuffer) data);
                     break;
                 case Double:
-                    glBufferSubData(target, 0, (DoubleBuffer) vb.getData());
+                    glBufferSubData(target, 0, (DoubleBuffer) data);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown buffer format.");
             }
         }
 
-        vb.clearUpdateNeeded();
+    }
+
+    private void uploadVertexDataFull(VertexBuffer vb, int target) throws UnsupportedOperationException {
+        vb.getData().rewind();
+        switch (vb.getFormat()) {
+            case Byte:
+            case UnsignedByte:
+                glBufferSubData(target, 0, (ByteBuffer) vb.getData());
+                break;
+            case Short:
+            case UnsignedShort:
+                glBufferSubData(target, 0, (ShortBuffer) vb.getData());
+                break;
+            case Int:
+            case UnsignedInt:
+                glBufferSubData(target, 0, (IntBuffer) vb.getData());
+                break;
+            case Float:
+                glBufferSubData(target, 0, (FloatBuffer) vb.getData());
+                break;
+            case Double:
+                glBufferSubData(target, 0, (DoubleBuffer) vb.getData());
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown buffer format.");
+        }
+    }
+
+    private void initializeVertexData(VertexBuffer vb, int target, int usage) throws UnsupportedOperationException {
+        vb.getData().rewind();
+        switch (vb.getFormat()) {
+            case Byte:
+            case UnsignedByte:
+                glBufferData(target, (ByteBuffer) vb.getData(), usage);
+                break;
+                //            case Half:
+            case Short:
+            case UnsignedShort:
+                glBufferData(target, (ShortBuffer) vb.getData(), usage);
+                break;
+            case Int:
+            case UnsignedInt:
+                glBufferData(target, (IntBuffer) vb.getData(), usage);
+                break;
+            case Float:
+                glBufferData(target, (FloatBuffer) vb.getData(), usage);
+                break;
+            case Double:
+                glBufferData(target, (DoubleBuffer) vb.getData(), usage);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown buffer format.");
+        }
     }
 
     public void deleteBuffer(VertexBuffer vb) {
