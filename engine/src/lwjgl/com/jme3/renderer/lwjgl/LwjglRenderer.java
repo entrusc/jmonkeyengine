@@ -2167,6 +2167,13 @@ if (!updates.isEmpty()) {
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
         }
+
+        if (vb instanceof PartialUpdatedVertexBuffer) {
+            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
+
+            //clear partial updates
+            pvb.getAndClearUpdates();
+        }
     }
 
     private void initializeVertexData(VertexBuffer vb, int target, int usage) throws UnsupportedOperationException {
