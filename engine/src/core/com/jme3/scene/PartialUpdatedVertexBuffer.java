@@ -149,7 +149,6 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     }
 
     public List<Update> getAndClearUpdates() {
-        System.out.println(">> CLEARED");
         final List<Update> result = this.updates;
         this.updates = new ArrayList<Update>();
         return result;

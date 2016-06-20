@@ -2110,13 +2110,14 @@ public class LwjglRenderer implements Renderer {
         final Buffer data = vb.getData();
 
 if (!updates.isEmpty()) {
-    System.out.println(">>> Sending " + updates.size() + " updates to GPU ...");
+    System.out.println(System.identityHashCode(vb) + ">>> Sending " + updates.size() + " updates to GPU ...");
 }
 
         //only transfer the changed parts to GPU
         for (Update update : updates) {
             data.position(update.getPos());
             data.limit(update.getPos() + update.getLength());
+System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.getLength() + ")");
             switch (vb.getFormat()) {
                 case Byte:
                 case UnsignedByte:
@@ -2202,7 +2203,7 @@ if (!updates.isEmpty()) {
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
         }
-        
+
         if (vb instanceof PartialUpdatedVertexBuffer) {
             PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
 
