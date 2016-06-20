@@ -2116,8 +2116,8 @@ if (!updates.isEmpty()) {
         //only transfer the changed parts to GPU
         for (Update update : updates) {
             data.position(update.getPos());
-            data.limit(update.getPos() + update.getLength() + 1);
-System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.getLength() + ")");
+            data.limit(update.getPos() + update.getLength());
+System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.getLength() + " / remaining: " + data.remaining() + ")");
             switch (vb.getFormat()) {
                 case Byte:
                 case UnsignedByte:
@@ -2129,10 +2129,10 @@ System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.g
                     break;
                 case Int:
                 case UnsignedInt:
-                    glBufferSubData(target, update.getPos(), (IntBuffer) data);
+                    glBufferSubData(target, update.getPos() * 4, (IntBuffer) data);
                     break;
                 case Float:
-                    glBufferSubData(target, update.getPos(), (FloatBuffer) data);
+                    glBufferSubData(target, update.getPos() * 4, (FloatBuffer) data);
                     break;
                 case Double:
                     glBufferSubData(target, update.getPos(), (DoubleBuffer) data);
