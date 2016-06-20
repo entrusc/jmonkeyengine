@@ -2139,6 +2139,7 @@ if (!updates.isEmpty()) {
                 default:
                     throw new UnsupportedOperationException("Unknown buffer format.");
             }
+            data.clear();
         }
 
     }
