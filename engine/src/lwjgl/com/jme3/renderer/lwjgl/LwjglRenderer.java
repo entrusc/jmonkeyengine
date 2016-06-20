@@ -2109,6 +2109,10 @@ public class LwjglRenderer implements Renderer {
         final List<Update> updates = vb.getAndClearUpdates();
         final Buffer data = vb.getData();
 
+if (!updates.isEmpty()) {
+    System.out.println(">>> Sending " + updates.size() + " updates to GPU ...");
+}
+
         //only transfer the changed parts to GPU
         for (Update update : updates) {
             data.position(update.getPos());
@@ -2116,21 +2120,21 @@ public class LwjglRenderer implements Renderer {
             switch (vb.getFormat()) {
                 case Byte:
                 case UnsignedByte:
-                    glBufferSubData(target, 0, (ByteBuffer) data);
+                    glBufferSubData(target, update.getPos(), (ByteBuffer) data);
                     break;
                 case Short:
                 case UnsignedShort:
-                    glBufferSubData(target, 0, (ShortBuffer) data);
+                    glBufferSubData(target, update.getPos(), (ShortBuffer) data);
                     break;
                 case Int:
                 case UnsignedInt:
-                    glBufferSubData(target, 0, (IntBuffer) data);
+                    glBufferSubData(target, update.getPos(), (IntBuffer) data);
                     break;
                 case Float:
-                    glBufferSubData(target, 0, (FloatBuffer) data);
+                    glBufferSubData(target, update.getPos(), (FloatBuffer) data);
                     break;
                 case Double:
-                    glBufferSubData(target, 0, (DoubleBuffer) data);
+                    glBufferSubData(target, update.getPos(), (DoubleBuffer) data);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown buffer format.");
