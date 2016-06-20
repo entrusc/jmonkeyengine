@@ -130,6 +130,20 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         super.updateData(data);
     }
 
+    /**
+     * returns a buffer-like object that is under observation
+     * by this vertex buffer. Any change to this buffer is also
+     * propagated down to this vertex buffer's internal data buffer,
+     * but in addition the changes are noted and then transfered
+     * to the GPU without the need to transfer the entire buffer
+     * to the GPU.
+     *
+     * @return
+     */
+    public ObservedBuffer getUpdateBuffer() {
+        return updateBuffer;
+    }
+
     public List<Update> getAndClearUpdates() {
         final List<Update> result = this.updates;
         this.updates = new ArrayList<Update>();
