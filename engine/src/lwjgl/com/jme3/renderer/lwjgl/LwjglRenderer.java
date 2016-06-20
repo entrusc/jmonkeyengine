@@ -2116,7 +2116,7 @@ if (!updates.isEmpty()) {
         //only transfer the changed parts to GPU
         for (Update update : updates) {
             data.position(update.getPos());
-            data.limit(update.getPos() + (update.getLength() + 1) * 4);
+            data.limit((update.getPos() + update.getLength() + 1) * 4);
 System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.getLength() + ")");
             switch (vb.getFormat()) {
                 case Byte:
