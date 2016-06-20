@@ -111,6 +111,10 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     }
 
+    public PartialUpdatedVertexBuffer(Type type) {
+        super(type);
+    }
+
     @Override
     public void setupData(Usage usage, int components, Format format, Buffer data) {
         super.setupData(usage, components, format, data);
