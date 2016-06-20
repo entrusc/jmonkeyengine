@@ -91,7 +91,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(float[] d, int offset, int length) {
             FloatBuffer fBuffer = (FloatBuffer) data;
-            updates.add(new Update(data.position(), length * (Float.SIZE / 8)));
+            updates.add(new Update(fBuffer.position(), length));
             fBuffer.put(d, offset, length);
         }
 
@@ -105,7 +105,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(int[] d, int offset, int length) {
             IntBuffer iBuffer = (IntBuffer) data;
-            updates.add(new Update(data.position(), length * (Integer.SIZE / 8)));
+            updates.add(new Update(iBuffer.position(), length));
             iBuffer.put(d, offset, length);
         }
 
