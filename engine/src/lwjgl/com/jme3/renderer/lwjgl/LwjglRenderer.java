@@ -2145,9 +2145,9 @@ public class LwjglRenderer implements Renderer {
                 default:
                     throw new UnsupportedOperationException("Unknown buffer format.");
             }
+            data.clear();
         }
 
-        data.clear();
     }
 
     private void uploadVertexDataFull(VertexBuffer vb, int target) throws UnsupportedOperationException {
