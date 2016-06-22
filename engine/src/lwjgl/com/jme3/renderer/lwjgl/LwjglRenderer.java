@@ -2093,13 +2093,10 @@ public class LwjglRenderer implements Renderer {
 
         if (vb instanceof PartialUpdatedVertexBuffer) {
             if (created || vb.hasDataSizeChanged()) {
-                long time = System.nanoTime();
-                initializeVertexData(vb, target, usage);
-                System.out.println(String.format("Full upload took %.2f ms", ((System.nanoTime() - time) / 1000000f)));
-            } else {
-                PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
-                uploadVertexDataPartial(pvb, target);
+                initializeEmptyVertexData(vb, target, usage);
             }
+            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
+            uploadVertexDataPartial(pvb, target);
         } else {
             if (created || vb.hasDataSizeChanged()) {
                 initializeVertexData(vb, target, usage);

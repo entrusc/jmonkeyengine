@@ -39,6 +39,9 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 /**
  * A vertex buffer that allows for partial updating
@@ -50,9 +53,11 @@ import java.util.List;
 public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     private final List<Update> updates = new LinkedList<Update>();
-    private ObservedBuffer updateBuffer = null;
+    private final NavigableMap<Integer, Update> updatesMap = new TreeMap<Integer, Update>();
+    private volatile ObservedBuffer updateBuffer = null;
 
-    private int maxElementsUpdatePerFrame = Integer.MAX_VALUE;
+    private volatile int maxElementsUpdatePerFrame = Integer.MAX_VALUE;
+    private volatile boolean optimizeUpdates = true;
 
     public PartialUpdatedVertexBuffer(Type type) {
         super(type);
@@ -67,12 +72,13 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     }
 
     @Override
-    public void updateData(Buffer data) {
+    public synchronized void updateData(Buffer data) {
         if (this.data != null && !this.data.getClass().equals(data.getClass())) {
             dataSizeChanged = true;
 
             //clear old updates
             updates.clear();
+            updatesMap.clear();
 
             //enqueue the whole buffer again (we can't be sure that the GPU's memory range
             //is just enlarged)
@@ -80,7 +86,9 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
             while (pos < data.capacity()) {
                 final int length = Math.min(data.capacity() - pos, maxElementsUpdatePerFrame);
                 if (length > 0) {
-                    this.updates.add(new Update(pos, length));
+                    final Update update = new Update(pos, length);
+                    this.updates.add(update);
+                    this.updatesMap.put(update.pos, update);
                 }
                 pos += length;
             }
@@ -104,6 +112,21 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         this.maxElementsUpdatePerFrame = maxElementsUpdatePerFrame;
     }
 
+    public boolean isOptimizeUpdates() {
+        return optimizeUpdates;
+    }
+
+    /**
+     * sets whether this vertex buffer should optimize
+     * updates automatically by joining updates with
+     * neighboring updates if they touch or overlap.
+     *
+     * @param optimizeUpdates
+     */
+    public void setOptimizeUpdates(boolean optimizeUpdates) {
+        this.optimizeUpdates = optimizeUpdates;
+    }
+
     /**
      * returns a buffer-like object that is under observation
      * by this vertex buffer. Any change to this buffer is also
@@ -118,15 +141,22 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         return updateBuffer;
     }
 
-    public boolean hasUpdates() {
+    @Override
+    public boolean isUpdateNeeded() {
+        return hasUpdates() || super.isUpdateNeeded();
+    }
+
+    public synchronized boolean hasUpdates() {
         return !this.updates.isEmpty();
     }
 
-    public Update getNextUpdate() {
-        return this.updates.remove(0);
+    public synchronized Update getNextUpdate() {
+        final Update update = this.updates.remove(0);
+        this.updatesMap.remove(update.pos);
+        return update;
     }
 
-    private void createObservedBuffer(Buffer buffer) throws IllegalArgumentException {
+    private synchronized void createObservedBuffer(Buffer buffer) throws IllegalArgumentException {
         if (buffer instanceof FloatBuffer) {
             this.updateBuffer = new ObservedFloatBuffer();
         } else if (buffer instanceof IntBuffer) {
@@ -142,9 +172,72 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         }
     }
 
+    private synchronized void addUpdate(Update update) {
+        if (optimizeUpdates) {
+            do {
+                //overlapping exactly?
+                Update otherUpdate = this.updatesMap.get(update.pos);
+                if (otherUpdate != null) {
+                    if (otherUpdate.length < update.length) {
+                        otherUpdate.length = update.length;
+                    }
+
+                    this.updatesMap.remove(otherUpdate.pos);
+                    this.updates.remove(otherUpdate);
+                    update = otherUpdate;
+
+                    continue; //the other update also updates the region of this update!
+                }
+
+                //overlapping with lower entry?
+                Map.Entry<Integer, Update> entry = this.updatesMap.floorEntry(update.pos);
+                if (entry != null) {
+                    otherUpdate = entry.getValue();
+                    if (otherUpdate.pos + otherUpdate.length >= update.pos) {
+                        if (otherUpdate.pos + otherUpdate.length < update.pos + update.length) {
+                            otherUpdate.length = (update.pos + update.length - otherUpdate.pos);
+                        } //otherwise this update is already included in the previous update
+
+                        this.updatesMap.remove(otherUpdate.pos);
+                        this.updates.remove(otherUpdate);
+                        update = otherUpdate;
+
+                        continue;
+                    }
+                }
+
+                //overlapping with higher entry?
+                entry = this.updatesMap.ceilingEntry(update.pos);
+                if (entry != null) {
+                    otherUpdate = entry.getValue();
+                    if (update.pos + update.length >= otherUpdate.pos) {
+                        if (otherUpdate.pos + otherUpdate.length > update.pos + update.length) {
+                            otherUpdate.length = (otherUpdate.pos + otherUpdate.length - update.pos);
+                        } else {
+                            otherUpdate.length = update.length;
+                        }
+                        this.updatesMap.remove(otherUpdate.pos);
+                        this.updates.remove(otherUpdate);
+                        otherUpdate.pos = update.pos;
+
+                        update = otherUpdate;
+                        continue;
+                    }
+                }
+
+                //not overlapping at all
+                this.updates.add(update);
+                this.updatesMap.put(update.pos, update);
+                update = null;
+            } while (update != null);
+        } else {
+            this.updates.add(update);
+        }
+    }
+
     public static class Update {
-        private final int pos;
-        private final int length;
+        private int pos;
+        private int length;
 
         public Update(int pos, int length) {
             this.pos = pos;
@@ -184,7 +277,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(float[] d, int offset, int length) {
             FloatBuffer fBuffer = (FloatBuffer) data;
-            updates.add(new Update(fBuffer.position(), length));
+            addUpdate(new Update(fBuffer.position(), length));
             fBuffer.put(d, offset, length);
         }
 
@@ -198,7 +291,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(int[] d, int offset, int length) {
             IntBuffer iBuffer = (IntBuffer) data;
-            updates.add(new Update(iBuffer.position(), length));
+            addUpdate(new Update(iBuffer.position(), length));
             iBuffer.put(d, offset, length);
         }
 
@@ -212,7 +305,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(short[] d, int offset, int length) {
             ShortBuffer sBuffer = (ShortBuffer) data;
-            updates.add(new Update(sBuffer.position(), length));
+            addUpdate(new Update(sBuffer.position(), length));
             sBuffer.put(d, offset, length);
         }
 
@@ -226,7 +319,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(byte[] d, int offset, int length) {
             ByteBuffer bBuffer = (ByteBuffer) data;
-            updates.add(new Update(bBuffer.position(), length));
+            addUpdate(new Update(bBuffer.position(), length));
             bBuffer.put(d, offset, length);
         }
 
@@ -240,7 +333,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
         public void put(double[] d, int offset, int length) {
             DoubleBuffer dBuffer = (DoubleBuffer) data;
-            updates.add(new Update(dBuffer.position(), length));
+            addUpdate(new Update(dBuffer.position(), length));
             dBuffer.put(d, offset, length);
         }
 
