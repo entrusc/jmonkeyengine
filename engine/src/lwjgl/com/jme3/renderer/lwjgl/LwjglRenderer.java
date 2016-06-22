@@ -2091,33 +2091,38 @@ public class LwjglRenderer implements Renderer {
 
         int usage = convertUsage(vb.getUsage());
 
-        if (created || vb.hasDataSizeChanged()) {
-            initializeVertexData(vb, target, usage);
-        } else {
-            if (vb instanceof PartialUpdatedVertexBuffer) {
-                PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
-                uploadVertexDataPartial(pvb, target);
-            } else {
-                uploadVertexDataFull(vb, target);
+        if (vb instanceof PartialUpdatedVertexBuffer) {
+            if (created || vb.hasDataSizeChanged()) {
+                initializeEmptyVertexData(vb, target, usage);
             }
+            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
+            uploadVertexDataPartial(pvb, target);
+        } else {
+            if (created || vb.hasDataSizeChanged()) {
+                initializeVertexData(vb, target, usage);
+            }
+            uploadVertexDataFull(vb, target);
         }
+
 
         vb.clearUpdateNeeded();
     }
 
     private void uploadVertexDataPartial(PartialUpdatedVertexBuffer vb, int target) {
-        final List<Update> updates = vb.getAndClearUpdates();
         final Buffer data = vb.getData();
 
-if (!updates.isEmpty()) {
-    System.out.println(System.identityHashCode(vb) + ">>> Sending " + updates.size() + " updates to GPU ...");
-}
+        int updatedElements = 0;
 
-        //only transfer the changed parts to GPU
-        for (Update update : updates) {
+        //only transfer the changed parts to GPU.
+        //Note that the glBufferSubData expects the offset to be in bytes(!)
+        Update update;
+        while (vb.hasUpdates() && updatedElements < vb.getMaxElementsUpdatePerFrame()) {
+            update = vb.getNextUpdate();
             data.position(update.getPos());
             data.limit(update.getPos() + update.getLength());
-System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.getLength() + " / remaining: " + data.remaining() + ")");
+
+            updatedElements += update.getLength();
+
             switch (vb.getFormat()) {
                 case Byte:
                 case UnsignedByte:
@@ -2125,7 +2130,7 @@ System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.g
                     break;
                 case Short:
                 case UnsignedShort:
-                    glBufferSubData(target, update.getPos(), (ShortBuffer) data);
+                    glBufferSubData(target, update.getPos() * 2, (ShortBuffer) data);
                     break;
                 case Int:
                 case UnsignedInt:
@@ -2135,14 +2140,14 @@ System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.g
                     glBufferSubData(target, update.getPos() * 4, (FloatBuffer) data);
                     break;
                 case Double:
-                    glBufferSubData(target, update.getPos(), (DoubleBuffer) data);
+                    glBufferSubData(target, update.getPos() * 8, (DoubleBuffer) data);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown buffer format.");
             }
-            data.clear();
         }
 
+        data.clear();
     }
 
     private void uploadVertexDataFull(VertexBuffer vb, int target) throws UnsupportedOperationException {
@@ -2174,7 +2179,7 @@ System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.g
             PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
 
             //clear partial updates
-            pvb.getAndClearUpdates();
+            pvb.getNextUpdate();
         }
     }
 
@@ -2203,13 +2208,34 @@ System.out.println("\t" + " >> UPDATE " + update.getPos() + " (len: " + update.g
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
         }
+    }
 
-        if (vb instanceof PartialUpdatedVertexBuffer) {
-            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
-
-            //clear partial updates
-            pvb.getAndClearUpdates();
+    private void initializeEmptyVertexData(VertexBuffer vb, int target, int usage) throws UnsupportedOperationException {
+        int capacityInBytes = 0;
+        switch (vb.getFormat()) {
+            case Byte:
+            case UnsignedByte:
+                capacityInBytes = ((ByteBuffer) vb.getData()).capacity();
+                break;
+                //            case Half:
+            case Short:
+            case UnsignedShort:
+                capacityInBytes = ((ShortBuffer) vb.getData()).capacity() * 2;
+                break;
+            case Int:
+            case UnsignedInt:
+                capacityInBytes = ((IntBuffer) vb.getData()).capacity() * 4;
+                break;
+            case Float:
+                capacityInBytes = ((FloatBuffer) vb.getData()).capacity() * 4;
+                break;
+            case Double:
+                capacityInBytes = ((DoubleBuffer) vb.getData()).capacity() * 8;
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown buffer format.");
         }
+        glBufferData(target, capacityInBytes, usage);
     }
 
     public void deleteBuffer(VertexBuffer vb) {

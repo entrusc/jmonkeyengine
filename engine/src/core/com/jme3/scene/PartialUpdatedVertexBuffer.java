@@ -32,9 +32,12 @@
 package com.jme3.scene;
 
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
+import java.nio.ShortBuffer;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -46,8 +49,98 @@ import java.util.List;
  */
 public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
-    private List<Update> updates = new ArrayList<Update>();
+    private final List<Update> updates = new LinkedList<Update>();
     private ObservedBuffer updateBuffer = null;
+
+    private int maxElementsUpdatePerFrame = Integer.MAX_VALUE;
+
+    public PartialUpdatedVertexBuffer(Type type) {
+        super(type);
+    }
+
+    @Override
+    public void setupData(Usage usage, int components, Format format, Buffer data) {
+        super.setupData(usage, components, format, data);
+
+        //if this is called a second time the parent call will already rise an exception
+        createObservedBuffer(this.data);
+    }
+
+    @Override
+    public void updateData(Buffer data) {
+        if (this.data != null && !this.data.getClass().equals(data.getClass())) {
+            dataSizeChanged = true;
+
+            //clear old updates
+            updates.clear();
+
+            //enqueue the whole buffer again (we can't be sure that the GPU's memory range
+            //is just enlarged)
+            int pos = 0;
+            for (int i = 0; i < (data.capacity() / maxElementsUpdatePerFrame) + 1; ++i) {
+                final int length = Math.min(data.capacity() - pos, maxElementsUpdatePerFrame);
+                if (length > 0) {
+                    this.updates.add(new Update(pos, length));
+                }
+                pos += length;
+            }
+
+            createObservedBuffer(data);
+        }
+        super.updateData(data);
+    }
+
+    public int getMaxElementsUpdatePerFrame() {
+        return maxElementsUpdatePerFrame;
+    }
+
+    /**
+     * sets the amount of updated elements per frame. This is an estimate
+     * as element updates are aggregated.
+     *
+     * @param maxElementsUpdatePerFrame
+     */
+    public void setMaxElementUpdatesPerFrame(int maxElementsUpdatePerFrame) {
+        this.maxElementsUpdatePerFrame = maxElementsUpdatePerFrame;
+    }
+
+    /**
+     * returns a buffer-like object that is under observation
+     * by this vertex buffer. Any change to this buffer is also
+     * propagated down to this vertex buffer's internal data buffer,
+     * but in addition the changes are noted and then transfered
+     * to the GPU without the need to transfer the entire buffer
+     * to the GPU.
+     *
+     * @return
+     */
+    public ObservedBuffer getUpdateBuffer() {
+        return updateBuffer;
+    }
+
+    public boolean hasUpdates() {
+        return !this.updates.isEmpty();
+    }
+
+    public Update getNextUpdate() {
+        return this.updates.remove(0);
+    }
+
+    private void createObservedBuffer(Buffer buffer) throws IllegalArgumentException {
+        if (buffer instanceof FloatBuffer) {
+            this.updateBuffer = new ObservedFloatBuffer();
+        } else if (buffer instanceof IntBuffer) {
+            this.updateBuffer = new ObservedIntBuffer();
+        } else if (buffer instanceof ShortBuffer) {
+            this.updateBuffer = new ObservedShortBuffer();
+        } else if (buffer instanceof ByteBuffer) {
+            this.updateBuffer = new ObservedByteBuffer();
+        } else if (buffer instanceof DoubleBuffer) {
+            this.updateBuffer = new ObservedDoubleBuffer();
+        } else {
+            throw new IllegalArgumentException("Unsupported buffer type");
+        }
+    }
 
     public static class Update {
         private final int pos;
@@ -111,58 +204,48 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     }
 
-    public PartialUpdatedVertexBuffer(Type type) {
-        super(type);
-    }
+    public class ObservedShortBuffer extends ObservedBuffer {
 
-    @Override
-    public void setupData(Usage usage, int components, Format format, Buffer data) {
-        super.setupData(usage, components, format, data);
-
-        //if this is called a second time the parent call will already rise an exception
-        createObservedBuffer(this.data);
-    }
-
-    @Override
-    public void updateData(Buffer data) {
-        if (this.data != null && !this.data.getClass().equals(data.getClass())) {
-            dataSizeChanged = true;
-            updates.clear();
-
-            createObservedBuffer(data);
+        public void put(short[] d) {
+            this.put(d, 0, d.length);
         }
-        super.updateData(data);
-    }
 
-    /**
-     * returns a buffer-like object that is under observation
-     * by this vertex buffer. Any change to this buffer is also
-     * propagated down to this vertex buffer's internal data buffer,
-     * but in addition the changes are noted and then transfered
-     * to the GPU without the need to transfer the entire buffer
-     * to the GPU.
-     *
-     * @return
-     */
-    public ObservedBuffer getUpdateBuffer() {
-        return updateBuffer;
-    }
-
-    public List<Update> getAndClearUpdates() {
-        final List<Update> result = this.updates;
-        this.updates = new ArrayList<Update>();
-        return result;
-    }
-
-    private void createObservedBuffer(Buffer data1) throws IllegalArgumentException {
-        if (data1 instanceof FloatBuffer) {
-            this.updateBuffer = new ObservedFloatBuffer();
-        } else if (data1 instanceof IntBuffer) {
-            this.updateBuffer = new ObservedIntBuffer();
-        } else {
-            throw new IllegalArgumentException("Unsupported buffer type");
+        public void put(short[] d, int offset, int length) {
+            ShortBuffer sBuffer = (ShortBuffer) data;
+            updates.add(new Update(sBuffer.position(), length));
+            sBuffer.put(d, offset, length);
         }
+
     }
+
+    public class ObservedByteBuffer extends ObservedBuffer {
+
+        public void put(byte[] d) {
+            this.put(d, 0, d.length);
+        }
+
+        public void put(byte[] d, int offset, int length) {
+            ByteBuffer bBuffer = (ByteBuffer) data;
+            updates.add(new Update(bBuffer.position(), length));
+            bBuffer.put(d, offset, length);
+        }
+
+    }
+
+    public class ObservedDoubleBuffer extends ObservedBuffer {
+
+        public void put(double[] d) {
+            this.put(d, 0, d.length);
+        }
+
+        public void put(double[] d, int offset, int length) {
+            DoubleBuffer dBuffer = (DoubleBuffer) data;
+            updates.add(new Update(dBuffer.position(), length));
+            dBuffer.put(d, offset, length);
+        }
+
+    }
+
 
 
 
