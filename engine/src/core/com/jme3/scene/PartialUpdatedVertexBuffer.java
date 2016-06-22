@@ -77,7 +77,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
             //enqueue the whole buffer again (we can't be sure that the GPU's memory range
             //is just enlarged)
             int pos = 0;
-            for (int i = 0; i < (data.capacity() / maxElementsUpdatePerFrame) + 1; ++i) {
+            while (pos < data.capacity()) {
                 final int length = Math.min(data.capacity() - pos, maxElementsUpdatePerFrame);
                 if (length > 0) {
                     this.updates.add(new Update(pos, length));
