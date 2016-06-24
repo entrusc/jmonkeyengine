@@ -2112,7 +2112,6 @@ public class LwjglRenderer implements Renderer {
         final Buffer data = vb.getData();
 
         int updatedElements = 0;
-        int updatesDone = 0;
 
         //only transfer the changed parts to GPU.
         //Note that the glBufferSubData expects the offset to be in bytes(!)
@@ -2146,11 +2145,8 @@ public class LwjglRenderer implements Renderer {
                 default:
                     throw new UnsupportedOperationException("Unknown buffer format.");
             }
-            updatesDone++;
             data.clear();
         }
-
-        System.out.println("Uploaded " + updatesDone + " updates to the GPU");
 
     }
 
