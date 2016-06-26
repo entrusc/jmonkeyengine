@@ -76,26 +76,38 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         if (this.data != null && !this.data.getClass().equals(data.getClass())) {
             dataSizeChanged = true;
 
-            //clear old updates
-            updates.clear();
-            updatesMap.clear();
+            super.updateData(data);
 
-            //enqueue the whole buffer again (we can't be sure that the GPU's memory range
-            //is just enlarged)
-            int pos = 0;
-            while (pos < data.capacity()) {
-                final int length = Math.min(data.capacity() - pos, maxElementsUpdatePerFrame);
-                if (length > 0) {
-                    final Update update = new Update(pos, length);
-                    this.updates.add(update);
-                    this.updatesMap.put(update.pos, update);
-                }
-                pos += length;
-            }
-
+            updateFull();
             createObservedBuffer(data);
+        } else {
+            super.updateData(data);
         }
-        super.updateData(data);
+    }
+
+    /**
+     * clears all updates and schedules a full update
+     * of all the buffer's content at the next frame (and if
+     * maxElementsUpdatePerFarme is set, then the next
+     * ceil(data.capacity() / maxElementsUpdatePerFrame) - 1
+     * frames).
+     */
+    public synchronized void updateFull() {
+        //clear old updates
+        updates.clear();
+        updatesMap.clear();
+        //enqueue the whole buffer again (we can't be sure that the GPU's memory range
+        //is just enlarged)
+        int pos = 0;
+        while (pos < data.capacity()) {
+            final int length = Math.min(data.capacity() - pos, maxElementsUpdatePerFrame);
+            if (length > 0) {
+                final Update update = new Update(pos, length);
+                this.updates.add(update);
+                this.updatesMap.put(update.pos, update);
+            }
+            pos += length;
+        }
     }
 
     public int getMaxElementsUpdatePerFrame() {
