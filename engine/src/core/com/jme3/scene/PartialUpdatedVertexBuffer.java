@@ -170,15 +170,15 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     private synchronized void createObservedBuffer(Buffer buffer) throws IllegalArgumentException {
         if (buffer instanceof FloatBuffer) {
-            this.updateBuffer = new ObservedFloatBuffer();
+            this.updateBuffer = new ObservedFloatBuffer((FloatBuffer) buffer);
         } else if (buffer instanceof IntBuffer) {
-            this.updateBuffer = new ObservedIntBuffer();
+            this.updateBuffer = new ObservedIntBuffer((IntBuffer) buffer);
         } else if (buffer instanceof ShortBuffer) {
-            this.updateBuffer = new ObservedShortBuffer();
+            this.updateBuffer = new ObservedShortBuffer((ShortBuffer) buffer);
         } else if (buffer instanceof ByteBuffer) {
-            this.updateBuffer = new ObservedByteBuffer();
+            this.updateBuffer = new ObservedByteBuffer((ByteBuffer) buffer);
         } else if (buffer instanceof DoubleBuffer) {
-            this.updateBuffer = new ObservedDoubleBuffer();
+            this.updateBuffer = new ObservedDoubleBuffer((DoubleBuffer) buffer);
         } else {
             throw new IllegalArgumentException("Unsupported buffer type");
         }
@@ -267,28 +267,38 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     public abstract class ObservedBuffer {
 
+        protected final Buffer buffer;
+
+        protected ObservedBuffer(Buffer buffer) {
+            this.buffer = buffer;
+        }
+
         public void rewind() {
-            data.rewind();
+            buffer.rewind();
         }
 
         public int position() {
-            return data.position();
+            return buffer.position();
         }
 
         public void position(int pos) {
-            data.position(pos);
+            buffer.position(pos);
         }
 
     }
 
     public class ObservedFloatBuffer extends ObservedBuffer {
 
+        public ObservedFloatBuffer(FloatBuffer buffer) {
+            super(buffer.duplicate());
+        }
+
         public void put(float[] d) {
             this.put(d, 0, d.length);
         }
 
         public void put(float[] d, int offset, int length) {
-            FloatBuffer fBuffer = (FloatBuffer) data;
+            FloatBuffer fBuffer = (FloatBuffer) buffer;
             addUpdate(new Update(fBuffer.position(), length));
             fBuffer.put(d, offset, length);
         }
@@ -297,12 +307,16 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     public class ObservedIntBuffer extends ObservedBuffer {
 
+        public ObservedIntBuffer(IntBuffer buffer) {
+            super(buffer.duplicate());
+        }
+
         public void put(int[] d) {
             this.put(d, 0, d.length);
         }
 
         public void put(int[] d, int offset, int length) {
-            IntBuffer iBuffer = (IntBuffer) data;
+            IntBuffer iBuffer = (IntBuffer) buffer;
             addUpdate(new Update(iBuffer.position(), length));
             iBuffer.put(d, offset, length);
         }
@@ -311,12 +325,16 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     public class ObservedShortBuffer extends ObservedBuffer {
 
+        public ObservedShortBuffer(ShortBuffer buffer) {
+            super(buffer.duplicate());
+        }
+
         public void put(short[] d) {
             this.put(d, 0, d.length);
         }
 
         public void put(short[] d, int offset, int length) {
-            ShortBuffer sBuffer = (ShortBuffer) data;
+            ShortBuffer sBuffer = (ShortBuffer) buffer;
             addUpdate(new Update(sBuffer.position(), length));
             sBuffer.put(d, offset, length);
         }
@@ -325,12 +343,16 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     public class ObservedByteBuffer extends ObservedBuffer {
 
+        public ObservedByteBuffer(ByteBuffer buffer) {
+            super(buffer.duplicate());
+        }
+
         public void put(byte[] d) {
             this.put(d, 0, d.length);
         }
 
         public void put(byte[] d, int offset, int length) {
-            ByteBuffer bBuffer = (ByteBuffer) data;
+            ByteBuffer bBuffer = (ByteBuffer) buffer;
             addUpdate(new Update(bBuffer.position(), length));
             bBuffer.put(d, offset, length);
         }
@@ -339,12 +361,16 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     public class ObservedDoubleBuffer extends ObservedBuffer {
 
+        public ObservedDoubleBuffer(DoubleBuffer buffer) {
+            super(buffer.duplicate());
+        }
+
         public void put(double[] d) {
             this.put(d, 0, d.length);
         }
 
         public void put(double[] d, int offset, int length) {
-            DoubleBuffer dBuffer = (DoubleBuffer) data;
+            DoubleBuffer dBuffer = (DoubleBuffer) buffer;
             addUpdate(new Update(dBuffer.position(), length));
             dBuffer.put(d, offset, length);
         }
