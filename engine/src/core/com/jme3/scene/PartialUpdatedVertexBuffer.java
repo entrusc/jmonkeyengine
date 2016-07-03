@@ -157,7 +157,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     @Override
     public boolean isUpdateNeeded() {
-        return hasUpdates() || super.isUpdateNeeded();
+        return super.isUpdateNeeded();
     }
 
     public synchronized boolean hasUpdates() {
