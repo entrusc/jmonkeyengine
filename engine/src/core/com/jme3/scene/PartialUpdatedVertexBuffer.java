@@ -74,7 +74,8 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     @Override
     public synchronized void updateData(Buffer data) {
         if (this.data != null
-                && !this.data.getClass().equals(data.getClass())) {
+                && (!this.data.getClass().equals(data.getClass())
+                    || this.data.capacity() != data.capacity())) {
             dataSizeChanged = true;
 
             super.updateData(data);
@@ -82,9 +83,6 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
             updateFull();
             createObservedBuffer(data);
         } else {
-            if (data.capacity() != this.data.capacity()) {
-                createObservedBuffer(data);
-            }
             super.updateData(data);
         }
     }
