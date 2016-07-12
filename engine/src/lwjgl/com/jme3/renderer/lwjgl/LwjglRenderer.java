@@ -2123,6 +2123,11 @@ public class LwjglRenderer implements Renderer {
 
             updatedElements += update.getLength();
 
+//DEBUG
+if (vb.getBufferType() == Type.Position) {
+    System.out.println("UPLOADING " + update.getLength() + " -> GPU");
+}
+
             switch (vb.getFormat()) {
                 case Byte:
                 case UnsignedByte:
