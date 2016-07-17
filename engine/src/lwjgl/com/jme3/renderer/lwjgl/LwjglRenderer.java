@@ -2092,16 +2092,20 @@ public class LwjglRenderer implements Renderer {
         int usage = convertUsage(vb.getUsage());
 
         if (vb instanceof PartialUpdatedVertexBuffer) {
-            if (created || vb.hasDataSizeChanged()) {
-                initializeEmptyVertexData(vb, target, usage);
-            }
             PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
-            uploadVertexDataPartial(pvb, target);
+            if (created || vb.hasDataSizeChanged() || pvb.isFullUpdateNeeded()) {
+                pvb.clearFullUpdateNeeded();
+                initializeVertexData(vb, target, usage);
+                System.out.println("Full upload of " + vb.getData().capacity() + " bytes ^");
+            } else {
+                uploadVertexDataPartial(pvb, target);
+            }
         } else {
             if (created || vb.hasDataSizeChanged()) {
                 initializeVertexData(vb, target, usage);
+            } else {
+                uploadVertexDataFull(vb, target);
             }
-            uploadVertexDataFull(vb, target);
         }
 
 

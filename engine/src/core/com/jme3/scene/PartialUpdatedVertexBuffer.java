@@ -58,6 +58,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     private volatile int maxElementsUpdatePerFrame = Integer.MAX_VALUE;
     private volatile boolean optimizeUpdates = true;
+    private volatile boolean updateFull = true;
 
     public PartialUpdatedVertexBuffer(Type type) {
         super(type);
@@ -81,6 +82,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
             super.updateData(data);
 
             updateFull();
+            setUpdateNeeded();
             createObservedBuffer(data);
         } else {
             super.updateData(data);
@@ -100,16 +102,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         updatesMap.clear();
         //enqueue the whole buffer again (we can't be sure that the GPU's memory range
         //is just enlarged)
-        int pos = 0;
-        while (pos < data.capacity()) {
-            final int length = Math.min(data.capacity() - pos, maxElementsUpdatePerFrame);
-            if (length > 0) {
-                final Update update = new Update(pos, length);
-                this.updates.add(update);
-                this.updatesMap.put(update.pos, update);
-            }
-            pos += length;
-        }
+        updateFull = true;
     }
 
     public int getMaxElementsUpdatePerFrame() {
@@ -128,6 +121,10 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     public boolean isOptimizeUpdates() {
         return optimizeUpdates;
+    }
+
+    public boolean isFullUpdateNeeded() {
+        return updateFull;
     }
 
     /**
@@ -157,7 +154,11 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     @Override
     public boolean isUpdateNeeded() {
-        return super.isUpdateNeeded() || this.hasUpdates();
+        return super.isUpdateNeeded() || this.hasUpdates() || updateFull;
+    }
+
+    public synchronized void clearFullUpdateNeeded() {
+        this.updateFull = false;
     }
 
     public synchronized boolean hasUpdates() {
@@ -187,65 +188,67 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     }
 
     private synchronized void addUpdate(Update update) {
-        if (optimizeUpdates) {
-            do {
-                //overlapping exactly?
-                Update otherUpdate = this.updatesMap.get(update.pos);
-                if (otherUpdate != null) {
-                    if (otherUpdate.length < update.length) {
-                        otherUpdate.length = update.length;
-                    }
-
-                    this.updatesMap.remove(otherUpdate.pos);
-                    this.updates.remove(otherUpdate);
-                    update = otherUpdate;
-
-                    continue; //the other update also updates the region of this update!
-                }
-
-                //overlapping with lower entry?
-                Map.Entry<Integer, Update> entry = this.updatesMap.floorEntry(update.pos);
-                if (entry != null) {
-                    otherUpdate = entry.getValue();
-                    if (otherUpdate.pos + otherUpdate.length >= update.pos) {
-                        if (otherUpdate.pos + otherUpdate.length < update.pos + update.length) {
-                            otherUpdate.length = (update.pos + update.length - otherUpdate.pos);
-                        } //otherwise this update is already included in the previous update
-
-                        this.updatesMap.remove(otherUpdate.pos);
-                        this.updates.remove(otherUpdate);
-                        update = otherUpdate;
-
-                        continue;
-                    }
-                }
-
-                //overlapping with higher entry?
-                entry = this.updatesMap.ceilingEntry(update.pos);
-                if (entry != null) {
-                    otherUpdate = entry.getValue();
-                    if (update.pos + update.length >= otherUpdate.pos) {
-                        if (otherUpdate.pos + otherUpdate.length > update.pos + update.length) {
-                            otherUpdate.length = (otherUpdate.pos + otherUpdate.length - update.pos);
-                        } else {
+        if (!this.updateFull) {
+            if (optimizeUpdates) {
+                do {
+                    //overlapping exactly?
+                    Update otherUpdate = this.updatesMap.get(update.pos);
+                    if (otherUpdate != null) {
+                        if (otherUpdate.length < update.length) {
                             otherUpdate.length = update.length;
                         }
+
                         this.updatesMap.remove(otherUpdate.pos);
                         this.updates.remove(otherUpdate);
-                        otherUpdate.pos = update.pos;
-
                         update = otherUpdate;
-                        continue;
-                    }
-                }
 
-                //not overlapping at all
+                        continue; //the other update also updates the region of this update!
+                    }
+
+                    //overlapping with lower entry?
+                    Map.Entry<Integer, Update> entry = this.updatesMap.floorEntry(update.pos);
+                    if (entry != null) {
+                        otherUpdate = entry.getValue();
+                        if (otherUpdate.pos + otherUpdate.length >= update.pos) {
+                            if (otherUpdate.pos + otherUpdate.length < update.pos + update.length) {
+                                otherUpdate.length = (update.pos + update.length - otherUpdate.pos);
+                            } //otherwise this update is already included in the previous update
+
+                            this.updatesMap.remove(otherUpdate.pos);
+                            this.updates.remove(otherUpdate);
+                            update = otherUpdate;
+
+                            continue;
+                        }
+                    }
+
+                    //overlapping with higher entry?
+                    entry = this.updatesMap.ceilingEntry(update.pos);
+                    if (entry != null) {
+                        otherUpdate = entry.getValue();
+                        if (update.pos + update.length >= otherUpdate.pos) {
+                            if (otherUpdate.pos + otherUpdate.length > update.pos + update.length) {
+                                otherUpdate.length = (otherUpdate.pos + otherUpdate.length - update.pos);
+                            } else {
+                                otherUpdate.length = update.length;
+                            }
+                            this.updatesMap.remove(otherUpdate.pos);
+                            this.updates.remove(otherUpdate);
+                            otherUpdate.pos = update.pos;
+
+                            update = otherUpdate;
+                            continue;
+                        }
+                    }
+
+                    //not overlapping at all
+                    this.updates.add(update);
+                    this.updatesMap.put(update.pos, update);
+                    update = null;
+                } while (update != null);
+            } else {
                 this.updates.add(update);
-                this.updatesMap.put(update.pos, update);
-                update = null;
-            } while (update != null);
-        } else {
-            this.updates.add(update);
+            }
         }
     }
 
