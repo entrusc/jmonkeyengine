@@ -2091,19 +2091,22 @@ public class LwjglRenderer implements Renderer {
 
         int usage = convertUsage(vb.getUsage());
 
-        if (vb instanceof PartialUpdatedVertexBuffer) {
-            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
-            if (created || vb.hasDataSizeChanged() || pvb.isFullUpdateNeeded()) {
-                pvb.clearFullUpdateNeeded();
-                initializeVertexData(vb, target, usage);
+        //make sure we don't get an access violation exception!
+        if (vb.getData() != null) {
+            if (vb instanceof PartialUpdatedVertexBuffer) {
+                PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
+                if (created || vb.hasDataSizeChanged() || pvb.isFullUpdateNeeded()) {
+                    pvb.clearFullUpdateNeeded();
+                    initializeVertexData(vb, target, usage);
+                } else {
+                    uploadVertexDataPartial(pvb, target);
+                }
             } else {
-                uploadVertexDataPartial(pvb, target);
-            }
-        } else {
-            if (created || vb.hasDataSizeChanged()) {
-                initializeVertexData(vb, target, usage);
-            } else {
-                uploadVertexDataFull(vb, target);
+                if (created || vb.hasDataSizeChanged()) {
+                    initializeVertexData(vb, target, usage);
+                } else {
+                    uploadVertexDataFull(vb, target);
+                }
             }
         }
 
@@ -2125,11 +2128,6 @@ public class LwjglRenderer implements Renderer {
             data.limit(update.getPos() + update.getLength());
 
             updatedElements += update.getLength();
-
-//DEBUG
-if (vb.getBufferType() == Type.Position) {
-    System.out.println("UPLOADING " + update.getLength() + " -> GPU");
-}
 
             switch (vb.getFormat()) {
                 case Byte:
