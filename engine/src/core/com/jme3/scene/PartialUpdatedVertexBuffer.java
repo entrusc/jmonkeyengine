@@ -58,7 +58,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     private volatile int maxElementsUpdatePerFrame = Integer.MAX_VALUE;
     private volatile boolean optimizeUpdates = true;
-    private volatile boolean updateFull = true;
+    private volatile boolean fullUpdateNeeded = true;
 
     public PartialUpdatedVertexBuffer(Type type) {
         super(type);
@@ -81,7 +81,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
             super.updateData(data);
 
-            updateFull();
+            setFullUpdateNeeded();
             setUpdateNeeded();
             createObservedBuffer(data);
         } else {
@@ -96,13 +96,14 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
      * ceil(data.capacity() / maxElementsUpdatePerFrame) - 1
      * frames).
      */
-    public synchronized void updateFull() {
+    public synchronized void setFullUpdateNeeded() {
         //clear old updates
         updates.clear();
         updatesMap.clear();
+        
         //enqueue the whole buffer again (we can't be sure that the GPU's memory range
         //is just enlarged)
-        updateFull = true;
+        fullUpdateNeeded = true;
     }
 
     public int getMaxElementsUpdatePerFrame() {
@@ -124,7 +125,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     }
 
     public boolean isFullUpdateNeeded() {
-        return updateFull;
+        return fullUpdateNeeded;
     }
 
     /**
@@ -154,11 +155,11 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
 
     @Override
     public boolean isUpdateNeeded() {
-        return super.isUpdateNeeded() || this.hasUpdates() || updateFull;
+        return super.isUpdateNeeded() || this.hasUpdates() || fullUpdateNeeded;
     }
 
     public synchronized void clearFullUpdateNeeded() {
-        this.updateFull = false;
+        this.fullUpdateNeeded = false;
     }
 
     public synchronized boolean hasUpdates() {
@@ -188,7 +189,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     }
 
     private synchronized void addUpdate(Update update) {
-        if (!this.updateFull) {
+        if (!this.fullUpdateNeeded) {
             if (optimizeUpdates) {
                 do {
                     //overlapping exactly?

@@ -2096,7 +2096,6 @@ public class LwjglRenderer implements Renderer {
             if (created || vb.hasDataSizeChanged() || pvb.isFullUpdateNeeded()) {
                 pvb.clearFullUpdateNeeded();
                 initializeVertexData(vb, target, usage);
-                System.out.println("Full upload of " + vb.getData().capacity() + " bytes ^");
             } else {
                 uploadVertexDataPartial(pvb, target);
             }
