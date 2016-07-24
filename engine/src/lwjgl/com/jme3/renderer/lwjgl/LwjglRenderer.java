@@ -2191,6 +2191,7 @@ public class LwjglRenderer implements Renderer {
 
     private void initializeVertexData(VertexBuffer vb, int target, int usage) throws UnsupportedOperationException {
         vb.getData().rewind();
+        System.out.println(">>> initializeVertexData: " + vb.getBufferType() + " >>> pos: " + vb.getData().position() + " | limit: " + vb.getData().limit() + " | capacity: " + vb.getData().capacity());
         switch (vb.getFormat()) {
             case Byte:
             case UnsignedByte:
