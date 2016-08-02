@@ -829,8 +829,6 @@ public class LwjglRenderer implements Renderer {
             return; // value not set yet..
         }
         statistics.onUniformSet();
-        StringBuilder sb = new StringBuilder();
-        System.out.println("Setting Uniform " + shader.getSources().iterator().next().getSource() + "." + uniform.getName());
 
         uniform.clearUpdateNeeded();
         FloatBuffer fb;
