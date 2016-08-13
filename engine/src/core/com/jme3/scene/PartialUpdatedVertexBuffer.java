@@ -100,7 +100,7 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
         //clear old updates
         updates.clear();
         updatesMap.clear();
-        
+
         //enqueue the whole buffer again (we can't be sure that the GPU's memory range
         //is just enlarged)
         fullUpdateNeeded = true;
@@ -167,9 +167,16 @@ public class PartialUpdatedVertexBuffer extends VertexBuffer {
     }
 
     public synchronized Update getNextUpdate() {
-        final Update update = this.updates.remove(0);
-        this.updatesMap.remove(update.pos);
-        return update;
+        if (!this.updates.isEmpty()) {
+            final Update update = this.updates.remove(0);
+            this.updatesMap.remove(update.pos);
+            return update;
+        }
+        return null;
+    }
+
+    public synchronized void clearUpdates() {
+        this.updates.clear();
     }
 
     private synchronized void createObservedBuffer(Buffer buffer) throws IllegalArgumentException {

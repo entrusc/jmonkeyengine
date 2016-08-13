@@ -2122,8 +2122,8 @@ public class LwjglRenderer implements Renderer {
         //only transfer the changed parts to GPU.
         //Note that the glBufferSubData expects the offset to be in bytes(!)
         Update update;
-        while (vb.hasUpdates() && updatedElements < vb.getMaxElementsUpdatePerFrame()) {
-            update = vb.getNextUpdate();
+        while ((update = vb.getNextUpdate()) != null
+                && updatedElements < vb.getMaxElementsUpdatePerFrame()) {
             data.position(update.getPos());
             data.limit(update.getPos() + update.getLength());
 
@@ -2157,6 +2157,13 @@ public class LwjglRenderer implements Renderer {
     }
 
     private void uploadVertexDataFull(VertexBuffer vb, int target) throws UnsupportedOperationException {
+        if (vb instanceof PartialUpdatedVertexBuffer) {
+            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
+
+            //clear partial updates
+            pvb.clearUpdates();
+        }
+
         vb.getData().rewind();
         switch (vb.getFormat()) {
             case Byte:
@@ -2179,13 +2186,6 @@ public class LwjglRenderer implements Renderer {
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
-        }
-
-        if (vb instanceof PartialUpdatedVertexBuffer) {
-            PartialUpdatedVertexBuffer pvb = (PartialUpdatedVertexBuffer) vb;
-
-            //clear partial updates
-            pvb.getNextUpdate();
         }
     }
 
