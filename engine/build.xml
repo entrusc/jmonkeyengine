@@ -628,7 +628,7 @@
         </artifact:deploy>
         -->
         <artifact:pom id="jme3-lib-jbullet-pom" artifactId="jbullet" name="jbullet" groupId="com.jme3-lib" version="${jme.version}-jme">
-            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
+            <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
         <artifact:pom id="jme3-lib-jbullet-pom" file="${build.dir}/maven-pom/jme3-lib-jbullet-pom.xml"/>
@@ -638,7 +638,7 @@
         </artifact:deploy>
         
         <artifact:pom id="jme3-lib-stack-alloc-pom" artifactId="stack-alloc" name="stack-alloc" groupId="com.jme3-lib" version="${jme.version}-jme">
-            license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/
+            <license name="BSD" url="http://opensource.org/licenses/BSD-3-Clause"/>
         </artifact:pom>
         <artifact:writepom pomRefId="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
         <artifact:pom id="jme3-lib-stack-alloc-pom" file="${build.dir}/maven-pom/jme3-lib-stack-alloc-pom.xml"/>
