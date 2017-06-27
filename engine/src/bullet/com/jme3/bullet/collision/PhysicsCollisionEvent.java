@@ -49,16 +49,49 @@ public class PhysicsCollisionEvent extends EventObject {
     private int type;
     private PhysicsCollisionObject nodeA;
     private PhysicsCollisionObject nodeB;
-    private long manifoldPointObjectId = 0;
+
+    private float appliedImpulse, appliedImpulseLateral1, appliedImpulseLateral2, combinedFriction, combinedRestitution, distance1;
+    private int index0, index1, lifeTime, partId0, partId1;
+    private boolean lateralFrictionInitialized;
+    private final Vector3f lateralFrictionDir1 = new Vector3f();
+    private final Vector3f lateralFrictionDir2 = new Vector3f();
+    private final Vector3f localPointA = new Vector3f();
+    private final Vector3f localPointB = new Vector3f();
+    private final Vector3f normalWorldOnB = new Vector3f();
+    private final Vector3f positionWorldOnA = new Vector3f();
+    private final Vector3f positionWorldOnB = new Vector3f();
 
     public PhysicsCollisionEvent(int type, PhysicsCollisionObject nodeA, PhysicsCollisionObject nodeB, long manifoldPointObjectId) {
         super(nodeA);
         this.type = type;
         this.nodeA = nodeA;
         this.nodeB = nodeB;
-        this.manifoldPointObjectId = manifoldPointObjectId;
+
+        readData(manifoldPointObjectId);
     }
-    
+
+    private void readData(long manifildPointObjectId) {
+        this.appliedImpulse = getAppliedImpulse(manifildPointObjectId);
+        this.appliedImpulseLateral1 = getAppliedImpulseLateral1(manifildPointObjectId);
+        this.appliedImpulseLateral2 = getAppliedImpulseLateral2(manifildPointObjectId);
+        this.combinedFriction = getCombinedFriction(manifildPointObjectId);
+        this.combinedRestitution = getCombinedRestitution(manifildPointObjectId);
+        this.distance1 = getDistance1(manifildPointObjectId);
+        this.index0 = getIndex0(manifildPointObjectId);
+        this.index1 = getIndex1(manifildPointObjectId);
+        getLateralFrictionDir1(manifildPointObjectId, lateralFrictionDir1);
+        getLateralFrictionDir2(manifildPointObjectId, lateralFrictionDir2);
+        this.lateralFrictionInitialized = isLateralFrictionInitialized(manifildPointObjectId);
+        this.lifeTime = getLifeTime(manifildPointObjectId);
+        getLocalPointA(manifildPointObjectId, localPointA);
+        getLocalPointB(manifildPointObjectId, localPointB);
+        getNormalWorldOnB(manifildPointObjectId, normalWorldOnB);
+        this.partId0 = getPartId0(manifildPointObjectId);
+        this.partId1 = getPartId1(manifildPointObjectId);
+        getPositionWorldOnA(manifildPointObjectId, positionWorldOnA);
+        getPositionWorldOnB(manifildPointObjectId, positionWorldOnB);
+    }
+
     /**
      * used by event factory, called when event is destroyed
      */
@@ -67,7 +100,6 @@ public class PhysicsCollisionEvent extends EventObject {
         this.type = 0;
         this.nodeA = null;
         this.nodeB = null;
-        this.manifoldPointObjectId = 0;
     }
 
     /**
@@ -78,7 +110,8 @@ public class PhysicsCollisionEvent extends EventObject {
         this.type = type;
         this.nodeA = source;
         this.nodeB = nodeB;
-        this.manifoldPointObjectId = manifoldPointObjectId;
+
+        readData(manifoldPointObjectId);
     }
 
     public int getType() {
@@ -114,132 +147,132 @@ public class PhysicsCollisionEvent extends EventObject {
     }
 
     public float getAppliedImpulse() {
-        return getAppliedImpulse(manifoldPointObjectId);
+        return this.appliedImpulse;
     }
     private native float getAppliedImpulse(long manifoldPointObjectId);
 
     public float getAppliedImpulseLateral1() {
-        return getAppliedImpulseLateral1(manifoldPointObjectId);
+        return this.appliedImpulseLateral1;
     }
     private native float getAppliedImpulseLateral1(long manifoldPointObjectId);
 
     public float getAppliedImpulseLateral2() {
-        return getAppliedImpulseLateral2(manifoldPointObjectId);
+        return this.appliedImpulseLateral2;
     }
     private native float getAppliedImpulseLateral2(long manifoldPointObjectId);
 
     public float getCombinedFriction() {
-        return getCombinedFriction(manifoldPointObjectId);
+        return this.combinedFriction;
     }
     private native float getCombinedFriction(long manifoldPointObjectId);
 
     public float getCombinedRestitution() {
-        return getCombinedRestitution(manifoldPointObjectId);
+        return this.combinedRestitution;
     }
     private native float getCombinedRestitution(long manifoldPointObjectId);
 
     public float getDistance1() {
-        return getDistance1(manifoldPointObjectId);
+        return this.distance1;
     }
     private native float getDistance1(long manifoldPointObjectId);
 
     public int getIndex0() {
-        return getIndex0(manifoldPointObjectId);
+        return this.index0;
     }
     private native int getIndex0(long manifoldPointObjectId);
 
     public int getIndex1() {
-        return getIndex1(manifoldPointObjectId);
+        return this.index1;
     }
     private native int getIndex1(long manifoldPointObjectId);
 
     public Vector3f getLateralFrictionDir1() {
-        return getLateralFrictionDir1(new Vector3f());
+        return this.lateralFrictionDir1.clone();
     }
 
     public Vector3f getLateralFrictionDir1(Vector3f lateralFrictionDir1) {
-        getLateralFrictionDir1(manifoldPointObjectId, lateralFrictionDir1);
+        lateralFrictionDir1.set(this.lateralFrictionDir1);
         return lateralFrictionDir1;
     }
     private native void getLateralFrictionDir1(long manifoldPointObjectId, Vector3f lateralFrictionDir1);
 
     public Vector3f getLateralFrictionDir2() {
-        return getLateralFrictionDir2(new Vector3f());
+        return this.lateralFrictionDir2.clone();
     }
 
     public Vector3f getLateralFrictionDir2(Vector3f lateralFrictionDir2) {
-        getLateralFrictionDir2(manifoldPointObjectId, lateralFrictionDir2);
+        lateralFrictionDir2.set(this.lateralFrictionDir2);
         return lateralFrictionDir2;
     }
     private native void getLateralFrictionDir2(long manifoldPointObjectId, Vector3f lateralFrictionDir2);
 
     public boolean isLateralFrictionInitialized() {
-        return isLateralFrictionInitialized(manifoldPointObjectId);
+        return this.lateralFrictionInitialized;
     }
     private native boolean isLateralFrictionInitialized(long manifoldPointObjectId);
 
     public int getLifeTime() {
-        return getLifeTime(manifoldPointObjectId);
+        return this.lifeTime;
     }
     private native int getLifeTime(long manifoldPointObjectId);
 
     public Vector3f getLocalPointA() {
-        return getLocalPointA(new Vector3f());
+        return this.localPointA.clone();
     }
-    
+
     public Vector3f getLocalPointA(Vector3f localPointA) {
-        getLocalPointA(manifoldPointObjectId, localPointA);
+        localPointA.set(this.localPointA);
         return localPointA;
     }
     private native void getLocalPointA(long manifoldPointObjectId, Vector3f localPointA);
 
     public Vector3f getLocalPointB() {
-        return getLocalPointB(new Vector3f());
+        return this.localPointB.clone();
     }
-    
+
     public Vector3f getLocalPointB(Vector3f localPointB) {
-        getLocalPointB(manifoldPointObjectId, localPointB);
+        localPointB.set(this.localPointB);
         return localPointB;
     }
     private native void getLocalPointB(long manifoldPointObjectId, Vector3f localPointB);
 
     public Vector3f getNormalWorldOnB() {
-        return getNormalWorldOnB(new Vector3f());
+        return this.normalWorldOnB.clone();
     }
 
     public Vector3f getNormalWorldOnB(Vector3f normalWorldOnB) {
-        getNormalWorldOnB(manifoldPointObjectId, normalWorldOnB);
+        normalWorldOnB.set(this.normalWorldOnB);
         return normalWorldOnB;
     }
     private native void getNormalWorldOnB(long manifoldPointObjectId, Vector3f normalWorldOnB);
 
     public int getPartId0() {
-        return getPartId0(manifoldPointObjectId);
+        return this.partId0;
     }
     private native int getPartId0(long manifoldPointObjectId);
 
     public int getPartId1() {
-        return getPartId1(manifoldPointObjectId);
+        return this.partId1;
     }
 
     private native int getPartId1(long manifoldPointObjectId);
 
     public Vector3f getPositionWorldOnA() {
-        return getPositionWorldOnA(new Vector3f());
+        return this.positionWorldOnA.clone();
     }
 
     public Vector3f getPositionWorldOnA(Vector3f positionWorldOnA) {
-        getPositionWorldOnA(positionWorldOnA);
+        positionWorldOnA.set(this.positionWorldOnA);
         return positionWorldOnA;
     }
     private native void getPositionWorldOnA(long manifoldPointObjectId, Vector3f positionWorldOnA);
 
     public Vector3f getPositionWorldOnB() {
-        return getPositionWorldOnB(new Vector3f());
+        return this.positionWorldOnB.clone();
     }
 
     public Vector3f getPositionWorldOnB(Vector3f positionWorldOnB) {
-        getPositionWorldOnB(manifoldPointObjectId, positionWorldOnB);
+        positionWorldOnB.set(this.positionWorldOnB);
         return positionWorldOnB;
     }
     private native void getPositionWorldOnB(long manifoldPointObjectId, Vector3f positionWorldOnB);
