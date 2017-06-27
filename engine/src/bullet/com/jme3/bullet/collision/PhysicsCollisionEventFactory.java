@@ -31,6 +31,7 @@
  */
 package com.jme3.bullet.collision;
 
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -39,7 +40,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class PhysicsCollisionEventFactory {
 
-    private ConcurrentLinkedQueue<PhysicsCollisionEvent> eventBuffer = new ConcurrentLinkedQueue<PhysicsCollisionEvent>();
+    private final Queue<PhysicsCollisionEvent> eventBuffer = new ConcurrentLinkedQueue<PhysicsCollisionEvent>();
 
     public PhysicsCollisionEvent getEvent(int type, PhysicsCollisionObject source, PhysicsCollisionObject nodeB, long manifoldPointObjectId) {
         PhysicsCollisionEvent event = eventBuffer.poll();

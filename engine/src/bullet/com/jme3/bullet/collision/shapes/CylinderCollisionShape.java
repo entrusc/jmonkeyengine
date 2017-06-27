@@ -81,14 +81,6 @@ public class CylinderCollisionShape extends CollisionShape {
         return axis;
     }
 
-    /**
-     * WARNING - CompoundCollisionShape scaling has no effect.
-     */
-    @Override
-    public void setScale(Vector3f scale) {
-        Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "CylinderCollisionShape cannot be scaled");
-    }
-
     public void write(JmeExporter ex) throws IOException {
         super.write(ex);
         OutputCapsule capsule = ex.getCapsule(this);
@@ -123,7 +115,7 @@ public class CylinderCollisionShape extends CollisionShape {
         setScale(scale);
         setMargin(margin);
     }
-    
+
     private native long createShape(int axis, Vector3f halfExtents);
 
 }
