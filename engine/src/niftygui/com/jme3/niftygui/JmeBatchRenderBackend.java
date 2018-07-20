@@ -37,7 +37,6 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.jme3.asset.TextureKey;
@@ -57,459 +56,549 @@ import com.jme3.texture.Texture.MinFilter;
 import com.jme3.texture.Texture2D;
 import com.jme3.util.BufferUtils;
 
-import de.lessvoid.nifty.batch.spi.BatchRenderBackend;
 import de.lessvoid.nifty.render.BlendMode;
+import de.lessvoid.nifty.render.batch.spi.BatchRenderBackend;
 import de.lessvoid.nifty.spi.render.MouseCursor;
 import de.lessvoid.nifty.tools.Color;
+import de.lessvoid.nifty.tools.Factory;
 import de.lessvoid.nifty.tools.ObjectPool;
-import de.lessvoid.nifty.tools.ObjectPool.Factory;
 import de.lessvoid.nifty.tools.resourceloader.NiftyResourceLoader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Nifty GUI BatchRenderBackend Implementation for jMonkeyEngine.
+ *
  * @author void
  */
 public class JmeBatchRenderBackend implements BatchRenderBackend {
-  private static Logger log = Logger.getLogger(JmeBatchRenderBackend.class.getName());
 
-  private final ObjectPool<Batch> batchPool;
-  private final List<Batch> batches = new ArrayList<Batch>();
+    private static final Logger LOGGER = Logger.getLogger(JmeBatchRenderBackend.class.getName());
 
-  // a modify texture call needs a jme Renderer to execute. if we're called to modify a texture but don't
-  // have a Renderer yet - since it was not initialized on the jme side - we'll cache the modify texture calls
-  // in here and execute them later (at the next beginFrame() call).
-  private final List<ModifyTexture> modifyTextureCalls = new ArrayList<ModifyTexture>();
+    private final ObjectPool<Batch> batchPool;
+    private final List<Batch> batches = new ArrayList<Batch>();
 
-  private RenderManager renderManager;
-  private NiftyJmeDisplay display;
-  private Texture2D textureAtlas;
-  private Batch currentBatch;
-  private Matrix4f tempMat = new Matrix4f();
-  private ByteBuffer initialData;
+    // a modify texture call needs a jme Renderer to execute. if we're called to modify a texture but don't
+    // have a Renderer yet - since it was not initialized on the jme side - we'll cache the modify texture calls
+    // in here and execute them later (at the next beginFrame() call).
+    private final List<ModifyTexture> modifyTextureCalls = new ArrayList<ModifyTexture>();
 
-  // this is only used for debugging purpose and will make the removed textures filled with a color
-  private boolean fillRemovedTexture =
-      Boolean.getBoolean(System.getProperty(JmeBatchRenderBackend.class.getName() + ".fillRemovedTexture", "false"));
+    private RenderManager renderManager;
+    private NiftyJmeDisplay display;
+    private final Map<Integer, TextureBundle> textureCollection = new HashMap<Integer, TextureBundle>();
+    private Batch currentBatch;
+    private Matrix4f tempMat = new Matrix4f();
 
-  public JmeBatchRenderBackend(final NiftyJmeDisplay display) {
-    this.display = display;
-    this.batchPool = new ObjectPool<Batch>(2, new Factory<Batch>() {
-      @Override
-      public Batch createNew() {
-        return new Batch();
-      }
-    });
-  }
+    private final AtomicInteger textureIds = new AtomicInteger();
 
-  public void setRenderManager(final RenderManager rm) {
-    this.renderManager = rm;
-  }
+    private boolean fillRemovedTexture = false;
 
-  @Override
-  public void setResourceLoader(final NiftyResourceLoader resourceLoader) {
-  }
-
-  @Override
-  public int getWidth() {
-    return display.getWidth();
-  }
-
-  @Override
-  public int getHeight() {
-    return display.getHeight();
-  }
-
-  @Override
-  public void beginFrame() {
-    log.fine("beginFrame()");
-
-    for (int i=0; i<batches.size(); i++) {
-      batchPool.free(batches.get(i));
-    }
-    batches.clear();
-
-    // in case we have pending modifyTexture calls we'll need to execute them now
-    if (!modifyTextureCalls.isEmpty()) {
-      Renderer renderer = display.getRenderer();
-      for (int i=0; i<modifyTextureCalls.size(); i++) {
-        modifyTextureCalls.get(i).execute(renderer);
-      }
-      modifyTextureCalls.clear();
-    }
-  }
-
-  @Override
-  public void endFrame() {
-    log.fine("endFrame");
-  }
-
-  @Override
-  public void clear() {
-  }
-
-  // TODO: Cursor support
-
-  @Override
-  public MouseCursor createMouseCursor(final String filename, final int hotspotX, final int hotspotY) throws IOException {
-    return new MouseCursor() {
-      public void dispose() {
-      }
-  };
-  }
-
-  @Override
-  public void enableMouseCursor(final MouseCursor mouseCursor) {
-  }
-
-  @Override
-  public void disableMouseCursor() {
-  }
-
-  @Override
-  public void createAtlasTexture(final int width, final int height) {
-    try {
-      createAtlasTextureInternal(width, height);
-
-      // we just initialize a second buffer here that will replace the texture atlas image
-      initialData = BufferUtils.createByteBuffer(width*height*4);
-      for (int i=0; i<width*height; i++) {
-        initialData.put((byte) 0x00);
-        initialData.put((byte) 0xff);
-        initialData.put((byte) 0x00);
-        initialData.put((byte) 0xff);
-      }
-    } catch (Exception e) {
-      log.log(Level.WARNING, e.getMessage(), e);
-    }
-  }
-
-  @Override
-  public void clearAtlasTexture(final int width, final int height) {
-    initialData.rewind();
-    textureAtlas.getImage().setData(initialData);
-  }
-
-  @Override
-  public Image loadImage(final String filename) {
-    TextureKey key = new TextureKey(filename, false);
-    key.setAnisotropy(0);
-    key.setAsCube(false);
-    key.setGenerateMips(false);
-
-    Texture2D texture = (Texture2D) display.getAssetManager().loadTexture(key);
-    return new ImageImpl(texture.getImage());
-  }
-
-  @Override
-  public void addImageToTexture(final Image image, final int x, final int y) {
-    ImageImpl imageImpl = (ImageImpl) image;
-    imageImpl.modifyTexture(this, textureAtlas, x, y);
-  }
-
-  @Override
-  public void beginBatch(final BlendMode blendMode) {
-    batches.add(batchPool.allocate());
-    currentBatch = batches.get(batches.size() - 1);
-    currentBatch.begin(blendMode);
-  }
-
-  @Override
-  public void addQuad(
-      final float x,
-      final float y,
-      final float width,
-      final float height,
-      final Color color1,
-      final Color color2,
-      final Color color3,
-      final Color color4,
-      final float textureX,
-      final float textureY,
-      final float textureWidth,
-      final float textureHeight) {
-    if (!currentBatch.canAddQuad()) {
-      beginBatch(currentBatch.getBlendMode());
-    }
-    currentBatch.addQuadInternal(x, y, width, height, color1, color2, color3, color4, textureX, textureY, textureWidth, textureHeight);
-  }
-
-  @Override
-  public int render() {
-    for (int i=0; i<batches.size(); i++) {
-      Batch batch = batches.get(i);
-      batch.render();
-    }
-    return batches.size();
-  }
-
-  @Override
-  public void removeFromTexture(final Image image, final int x, final int y, final int w, final int h) {
-    // Since we clear the whole texture when we switch screens it's not really necessary to remove data from the
-    // texture atlas when individual textures are removed. If necessary this can be enabled with a system property.
-    if (!fillRemovedTexture) {
-      return;
+    private static enum TextureType {
+        TEXTURE,
+        TEXTURE_ATLAS
     }
 
-    ByteBuffer initialData = BufferUtils.createByteBuffer(image.getWidth()*image.getHeight()*4);
-    for (int i=0; i<image.getWidth()*image.getHeight(); i++) {
-      initialData.put((byte) 0xff);
-      initialData.put((byte) 0x00);
-      initialData.put((byte) 0x00);
-      initialData.put((byte) 0xff);
-    }
-    initialData.rewind();
-    modifyTexture(
-        textureAtlas,
-        new com.jme3.texture.Image(Format.RGBA8, image.getWidth(), image.getHeight(), initialData),
-        x,
-        y);
-  }
+    private class TextureBundle {
+        private final int id = textureIds.getAndIncrement();
+        private final TextureType type;
+        private final Texture2D texture;
 
-  // internal implementations
+        public TextureBundle(TextureType type, Texture2D texture) {
+            this.type = type;
+            this.texture = texture;
+        }
 
-  private void createAtlasTextureInternal(final int width, final int height) throws Exception {
-    ByteBuffer initialData = BufferUtils.createByteBuffer(width*height*4);
-    for (int i=0; i<width*height*4; i++) {
-      initialData.put((byte) 0x80);
-    }
-    initialData.rewind();
-
-    textureAtlas = new Texture2D(new com.jme3.texture.Image(Format.RGBA8, width, height, initialData));
-    textureAtlas.setMinFilter(MinFilter.NearestNoMipMaps);
-    textureAtlas.setMagFilter(MagFilter.Nearest);
-  }
-
-  private void modifyTexture(
-      final Texture2D textureAtlas,
-      final com.jme3.texture.Image image,
-      final int x,
-      final int y) {
-    Renderer renderer = display.getRenderer();
-    if (renderer == null) {
-      // we have no renderer (yet) so we'll need to cache this call to the next beginFrame() call
-      modifyTextureCalls.add(new ModifyTexture(textureAtlas, image, x, y));
-      return;
     }
 
-    // all is well, we can execute the modify right away
-    renderer.modifyTexture(textureAtlas, image, x, y);
-  }
-
-  /**
-   * Simple BatchRenderBackend.Image implementation that will transport the dimensions of an image as well as the
-   * actual bytes from the loadImage() to the addImageToTexture() method.
-   *
-   * @author void
-   */
-  private static class ImageImpl implements BatchRenderBackend.Image {
-    private final com.jme3.texture.Image image;
-
-    public ImageImpl(final com.jme3.texture.Image image) {
-      this.image = image;
+    public JmeBatchRenderBackend(final NiftyJmeDisplay display) {
+        this.display = display;
+        this.batchPool = new ObjectPool<Batch>(new Factory<Batch>() {
+            @Override
+            public Batch createNew() {
+                return new Batch();
+            }
+        });
     }
 
-    public void modifyTexture(
-        final JmeBatchRenderBackend backend,
-        final Texture2D textureAtlas,
-        final int x,
-        final int y) {
-      backend.modifyTexture(textureAtlas, image, x, y);
+    public void setRenderManager(final RenderManager rm) {
+        this.renderManager = rm;
+    }
+
+    @Override
+    public void setResourceLoader(final NiftyResourceLoader resourceLoader) {
     }
 
     @Override
     public int getWidth() {
-      return image.getWidth();
+        return display.getWidth();
     }
 
     @Override
     public int getHeight() {
-      return image.getHeight();
-    }
-  }
-
-  /**
-   * Used to delay ModifyTexture calls in case we don't have a JME3 Renderer yet.
-   * @author void
-   */
-  private static class ModifyTexture {
-    private Texture2D atlas;
-    private com.jme3.texture.Image image;
-    private int x;
-    private int y;
-
-    private ModifyTexture(final Texture2D atlas, final com.jme3.texture.Image image, final int x, final int y) {
-      this.atlas = atlas;
-      this.image = image;
-      this.x = x;
-      this.y = y;
+        return display.getHeight();
     }
 
-    public void execute(final Renderer renderer) {
-      renderer.modifyTexture(atlas, image, x, y);
-    }
-  }
-
-  /**
-   * This class helps us to manage the batch data. We'll keep a bunch of instances of this class around that will be
-   * reused when needed. Each Batch instance provides room for a certain amount of vertices and we'll use a new Batch
-   * when we exceed this amount of data.
-   *
-   * @author void
-   */
-  private class Batch {
-    // 4 vertices per quad and 8 vertex attributes for each vertex:
-    // - 2 x pos
-    // - 2 x texture
-    // - 4 x color
-    //
-    // stored into 3 different buffers: position, texture coords, vertex color
-    // and an additional buffer for indexes
-    //
-    // there is a fixed amount of primitives per batch. if we run out of vertices we'll start a new batch.
-    private final static int BATCH_MAX_QUADS = 2000;
-    private final static int BATCH_MAX_VERTICES = BATCH_MAX_QUADS * 4;
-
-    // individual buffers for all the vertex attributes
-    private final VertexBuffer vertexPos = new VertexBuffer(Type.Position);
-    private final VertexBuffer vertexTexCoord = new VertexBuffer(Type.TexCoord);
-    private final VertexBuffer vertexColor = new VertexBuffer(Type.Color);
-    private final VertexBuffer indexBuffer = new VertexBuffer(Type.Index);
-
-    private final Mesh mesh = new Mesh();
-    private final Geometry meshGeometry = new Geometry("nifty-quad", mesh);
-    private final RenderState renderState = new RenderState();
-
-    private FloatBuffer vertexPosBuffer;
-    private FloatBuffer vertexTexCoordBuffer;
-    private FloatBuffer vertexColorBuffer;
-    private ShortBuffer indexBufferBuffer;
-
-    // number of quads already added to this batch.
-    private int quadCount;
-    private short globalVertexIndex;
-
-    // current blend mode
-    private BlendMode blendMode = BlendMode.BLEND;
-    private Material material;
-
-    public Batch() {
-      // setup mesh
-      vertexPos.setupData(Usage.Stream, 2, VertexBuffer.Format.Float, BufferUtils.createFloatBuffer(BATCH_MAX_VERTICES * 2));
-      vertexPosBuffer = (FloatBuffer) vertexPos.getData();
-      mesh.setBuffer(vertexPos);
-
-      vertexTexCoord.setupData(Usage.Stream, 2, VertexBuffer.Format.Float, BufferUtils.createFloatBuffer(BATCH_MAX_VERTICES * 2));
-      vertexTexCoordBuffer = (FloatBuffer) vertexTexCoord.getData();
-      mesh.setBuffer(vertexTexCoord);
-
-      vertexColor.setupData(Usage.Stream, 4, VertexBuffer.Format.Float, BufferUtils.createFloatBuffer(BATCH_MAX_VERTICES * 4));
-      vertexColorBuffer = (FloatBuffer) vertexColor.getData();
-      mesh.setBuffer(vertexColor);
-
-      indexBuffer.setupData(Usage.Stream, 3, VertexBuffer.Format.UnsignedShort, BufferUtils.createShortBuffer(BATCH_MAX_QUADS * 2 * 3));
-      indexBufferBuffer = (ShortBuffer) indexBuffer.getData();
-      mesh.setBuffer(indexBuffer);
-
-      material = new Material(display.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-      material.setBoolean("VertexColor", true);
-
-      renderState.setDepthTest(false);
-      renderState.setDepthWrite(false);
+    public void fillRemovedImagesInAtlas(final boolean shouldFill) {
+        this.fillRemovedTexture = shouldFill;
     }
 
-    public void begin(final BlendMode blendMode) {
-      this.blendMode = blendMode;
-      quadCount = 0;
-      globalVertexIndex = 0;
-      vertexPosBuffer.clear();
-      vertexTexCoordBuffer.clear();
-      vertexColorBuffer.clear();
-      indexBufferBuffer.clear();
+    public void useHighQualityTextures(boolean shouldUseHighQualityTextures) {
     }
 
-    public BlendMode getBlendMode() {
-      return blendMode;
+    @Override
+    public void beginFrame() {
+        LOGGER.fine("beginFrame()");
+
+        //I see no reason why we free the batches here - I disabled it for now
+//        for (int i = 0; i < batches.size(); i++) {
+//            batchPool.free(batches.get(i));
+//        }
+//        batches.clear();
+
+        // in case we have pending modifyTexture calls we'll need to execute them now
+        if (!modifyTextureCalls.isEmpty()) {
+            Renderer renderer = display.getRenderer();
+            for (int i = 0; i < modifyTextureCalls.size(); i++) {
+                modifyTextureCalls.get(i).execute(renderer);
+            }
+            modifyTextureCalls.clear();
+        }
     }
 
-    public void render() {
-      renderState.setBlendMode(convertBlend(blendMode));
-
-      vertexPosBuffer.flip();
-      vertexPos.updateData(vertexPosBuffer);
-
-      vertexTexCoordBuffer.flip();
-      vertexTexCoord.updateData(vertexTexCoordBuffer);
-
-      vertexColorBuffer.flip();
-      vertexColor.updateData(vertexColorBuffer);
-
-      indexBufferBuffer.flip();
-      indexBuffer.updateData(indexBufferBuffer);
-
-      tempMat.loadIdentity();
-      renderManager.setWorldMatrix(tempMat);
-      renderManager.setForcedRenderState(renderState);
-
-      material.setTexture("ColorMap", textureAtlas);
-      material.render(meshGeometry, renderManager);
-      renderManager.setForcedRenderState(null);
+    @Override
+    public void endFrame() {
+        LOGGER.fine("endFrame");
     }
 
-    private RenderState.BlendMode convertBlend(final BlendMode blendMode) {
-      if (blendMode == null) {
-          return RenderState.BlendMode.Off;
-      } else if (blendMode == BlendMode.BLEND) {
-          return RenderState.BlendMode.Alpha;
-      } else if (blendMode == BlendMode.MULIPLY) {
-          return RenderState.BlendMode.Modulate;
-      } else {
-          throw new UnsupportedOperationException();
-      }
-  }
-
-    public boolean canAddQuad() {
-      return (quadCount + 1) < BATCH_MAX_QUADS;
+    @Override
+    public void clear() {
     }
 
-    private void addQuadInternal(
-        final float x,
-        final float y,
-        final float width,
-        final float height,
-        final Color color1,
-        final Color color2,
-        final Color color3,
-        final Color color4,
-        final float textureX,
-        final float textureY,
-        final float textureWidth,
-        final float textureHeight) {
-      indexBufferBuffer.put((short)(globalVertexIndex + 0));
-      indexBufferBuffer.put((short)(globalVertexIndex + 3));
-      indexBufferBuffer.put((short)(globalVertexIndex + 2));
+    // TODO: Cursor support
+    @Override
+    public MouseCursor createMouseCursor(final String filename, final int hotspotX, final int hotspotY) throws IOException {
+        return new MouseCursor() {
+            public void enable() {
+            }
 
-      indexBufferBuffer.put((short)(globalVertexIndex + 0));
-      indexBufferBuffer.put((short)(globalVertexIndex + 2));
-      indexBufferBuffer.put((short)(globalVertexIndex + 1));
+            public void disable() {
+            }
 
-      addVertex(x,         y,          textureX,                textureY,                 color1);
-      addVertex(x + width, y,          textureX + textureWidth, textureY,                 color2);
-      addVertex(x + width, y + height, textureX + textureWidth, textureY + textureHeight, color4);
-      addVertex(x,         y + height, textureX,                textureY + textureHeight, color3);
-
-      quadCount++;
-      globalVertexIndex += 4;
+            public void dispose() {
+            }
+        };
     }
 
-    private void addVertex(final float x, final float y, final float tx, final float ty, final Color c) {
-      vertexPosBuffer.put(x);
-      vertexPosBuffer.put(getHeight() - y);
-      vertexTexCoordBuffer.put(tx);
-      vertexTexCoordBuffer.put(ty);
-      vertexColorBuffer.put(c.getRed());
-      vertexColorBuffer.put(c.getGreen());
-      vertexColorBuffer.put(c.getBlue());
-      vertexColorBuffer.put(c.getAlpha());
+    @Override
+    public void enableMouseCursor(final MouseCursor mouseCursor) {
     }
-  }
+
+    @Override
+    public void disableMouseCursor() {
+    }
+
+    @Override
+    public int createTextureAtlas(final int width, final int height) {
+        Texture2D atlas = createAtlasTextureInternal(width, height);
+        final TextureBundle textureBundle = new TextureBundle(TextureType.TEXTURE_ATLAS, atlas);
+        textureCollection.put(textureBundle.id, textureBundle);
+
+        return textureBundle.id;
+    }
+
+    private Texture2D getTexture(int id, TextureType type) {
+        TextureBundle bundle = textureCollection.get(id);
+        if (bundle == null) {
+            throw new IllegalArgumentException("id " + id + " is not registered as a texture");
+        }
+        if (bundle.type == type) {
+            throw new IllegalArgumentException("texture with id " + id
+                    + " is not of type " + type + " but of type " + bundle.type);
+        }
+        return bundle.texture;
+    }
+
+    @Override
+    public void clearTextureAtlas(final int id) {
+        Texture2D atlas = getTexture(id, TextureType.TEXTURE_ATLAS);
+        final com.jme3.texture.Image image = atlas.getImage();
+        final ByteBuffer data = image.getData(0);
+        data.rewind();
+        for (int i = 0; i < image.getWidth() * image.getHeight() * 4; ++i) {
+            data.put((byte) 0x00);
+        }
+        data.rewind();
+    }
+
+    @Override
+    public Image loadImage(final String filename) {
+        TextureKey key = new TextureKey(filename, false);
+        key.setAnisotropy(0);
+        key.setAsCube(false);
+        key.setGenerateMips(false);
+
+        Texture2D texture = (Texture2D) display.getAssetManager().loadTexture(key);
+        return new ImageImpl(texture.getImage());
+    }
+
+    public Image loadImage(final ByteBuffer imageData, final int width, final int height) {
+        com.jme3.texture.Image image = new com.jme3.texture.Image(Format.RGBA8, width, height, imageData);
+        return new ImageImpl(image);
+    }
+
+    @Override
+    public void addImageToAtlas(final Image image, final int x, final int y, final int id) {
+        final Texture2D atlas = getTexture(id, TextureType.TEXTURE_ATLAS);
+
+        ImageImpl imageImpl = (ImageImpl) image;
+        imageImpl.modifyTexture(this, atlas, x, y);
+    }
+
+    public int createNonAtlasTexture(Image image) {
+        ImageImpl imageImpl = (ImageImpl) image;
+        Texture2D texture = new Texture2D(imageImpl.image);
+
+        TextureBundle textureBundle = new TextureBundle(TextureType.TEXTURE, texture);
+        textureCollection.put(textureBundle.id, textureBundle);
+
+        return textureBundle.id;
+    }
+
+    public void deleteNonAtlasTexture(int textureId) {
+        textureCollection.remove(textureId);
+    }
+
+    public boolean existsNonAtlasTexture(int textureId) {
+        return textureCollection.containsKey(textureId)
+                && textureCollection.get(textureId).type == TextureType.TEXTURE;
+    }
+
+
+    @Override
+    public void beginBatch(final BlendMode blendMode, int textureId) {
+        batches.add(batchPool.allocate());
+        currentBatch = batches.get(batches.size() - 1);
+        currentBatch.begin(blendMode);
+
+        TextureBundle textureBundle = textureCollection.get(textureId);
+        currentBatch.setTexture(textureBundle);
+    }
+
+    @Override
+    public void addQuad(
+            float x,
+            float y,
+            float width,
+            float height,
+            Color color1,
+            Color color2,
+            Color color3,
+            Color color4,
+            float textureX,
+            float textureY,
+            float textureWidth,
+            float textureHeight,
+            int textureId) {
+
+        if (!currentBatch.canAddQuad() || textureId != currentBatch.textureBundle.id) {
+            beginBatch(currentBatch.getBlendMode(), textureId);
+        }
+        currentBatch.addQuadInternal(x, y, width, height, color1, color2, color3, color4, textureX, textureY, textureWidth, textureHeight);
+    }
+
+    @Override
+    public int render() {
+        for (int i = 0; i < batches.size(); i++) {
+            Batch batch = batches.get(i);
+            batch.render();
+        }
+        return batches.size();
+    }
+
+    public void removeImageFromAtlas(Image image, int atlasX, int atlasY, int imageWidth, int imageHeight, int atlasTextureId) {
+        removeFromTexture(atlasTextureId, image, atlasX, atlasY);
+    }
+
+    private void removeFromTexture(int atlasTextureId, Image image, int atlasX, int atlasY) {
+        // Since we clear the whole texture when we switch screens it's not really necessary to remove data from the
+        // texture atlas when individual textures are removed. If necessary this can be enabled with a system property.
+        if (!fillRemovedTexture) {
+            return;
+        }
+
+        Texture2D texture = textureCollection.get(atlasTextureId).texture;
+        ByteBuffer initialData = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * 4);
+        for (int i = 0; i < image.getWidth() * image.getHeight() * 4; i++) {
+            initialData.put((byte) 0x00);
+        }
+        initialData.rewind();
+        modifyTexture(
+                texture,
+                new com.jme3.texture.Image(Format.RGBA8, image.getWidth(), image.getHeight(), initialData),
+                atlasX,
+                atlasY);
+    }
+
+    // internal implementations
+    private Texture2D createAtlasTextureInternal(final int width, final int height) {
+        ByteBuffer initialData = BufferUtils.createByteBuffer(width * height * 4);
+        for (int i = 0; i < width * height * 4; i++) {
+            initialData.put((byte) 0x80);
+        }
+        initialData.rewind();
+
+        Texture2D textureAtlas = new Texture2D(new com.jme3.texture.Image(Format.RGBA8, width, height, initialData));
+        textureAtlas.setMinFilter(MinFilter.NearestNoMipMaps);
+        textureAtlas.setMagFilter(MagFilter.Nearest);
+
+        return textureAtlas;
+    }
+
+    private void modifyTexture(
+            final Texture2D textureAtlas,
+            final com.jme3.texture.Image image,
+            final int x,
+            final int y) {
+        Renderer renderer = display.getRenderer();
+        if (renderer == null) {
+            // we have no renderer (yet) so we'll need to cache this call to the next beginFrame() call
+            modifyTextureCalls.add(new ModifyTexture(textureAtlas, image, x, y));
+            return;
+        }
+
+        // all is well, we can execute the modify right away
+        renderer.modifyTexture(textureAtlas, image, x, y);
+    }
+
+    /**
+     * Simple BatchRenderBackend.Image implementation that will transport the
+     * dimensions of an image as well as the actual bytes from the loadImage()
+     * to the addImageToTexture() method.
+     *
+     * @author void
+     */
+    private static class ImageImpl implements BatchRenderBackend.Image {
+
+        private final com.jme3.texture.Image image;
+
+        public ImageImpl(final com.jme3.texture.Image image) {
+            this.image = image;
+        }
+
+        public void modifyTexture(
+                final JmeBatchRenderBackend backend,
+                final Texture2D textureAtlas,
+                final int x,
+                final int y) {
+            backend.modifyTexture(textureAtlas, image, x, y);
+        }
+
+        @Override
+        public int getWidth() {
+            return image.getWidth();
+        }
+
+        @Override
+        public int getHeight() {
+            return image.getHeight();
+        }
+    }
+
+    /**
+     * Used to delay ModifyTexture calls in case we don't have a JME3 Renderer
+     * yet.
+     *
+     * @author void
+     */
+    private static class ModifyTexture {
+
+        private Texture2D atlas;
+        private com.jme3.texture.Image image;
+        private int x;
+        private int y;
+
+        private ModifyTexture(final Texture2D atlas, final com.jme3.texture.Image image, final int x, final int y) {
+            this.atlas = atlas;
+            this.image = image;
+            this.x = x;
+            this.y = y;
+        }
+
+        public void execute(final Renderer renderer) {
+            renderer.modifyTexture(atlas, image, x, y);
+        }
+    }
+
+    /**
+     * This class helps us to manage the batch data. We'll keep a bunch of
+     * instances of this class around that will be reused when needed. Each
+     * Batch instance provides room for a certain amount of vertices and we'll
+     * use a new Batch when we exceed this amount of data.
+     *
+     * @author void
+     */
+    private class Batch {
+        // 4 vertices per quad and 8 vertex attributes for each vertex:
+        // - 2 x pos
+        // - 2 x texture
+        // - 4 x color
+        //
+        // stored into 3 different buffers: position, texture coords, vertex color
+        // and an additional buffer for indexes
+        //
+        // there is a fixed amount of primitives per batch. if we run out of vertices we'll start a new batch.
+
+        private final static int BATCH_MAX_QUADS = 2000;
+        private final static int BATCH_MAX_VERTICES = BATCH_MAX_QUADS * 4;
+
+        // individual buffers for all the vertex attributes
+        private final VertexBuffer vertexPos = new VertexBuffer(Type.Position);
+        private final VertexBuffer vertexTexCoord = new VertexBuffer(Type.TexCoord);
+        private final VertexBuffer vertexColor = new VertexBuffer(Type.Color);
+        private final VertexBuffer indexBuffer = new VertexBuffer(Type.Index);
+
+        private final Mesh mesh = new Mesh();
+        private final Geometry meshGeometry = new Geometry("nifty-quad", mesh);
+        private final RenderState renderState = new RenderState();
+
+        private FloatBuffer vertexPosBuffer;
+        private FloatBuffer vertexTexCoordBuffer;
+        private FloatBuffer vertexColorBuffer;
+        private ShortBuffer indexBufferBuffer;
+
+        // number of quads already added to this batch.
+        private int quadCount;
+        private short globalVertexIndex;
+
+        // current blend mode
+        private BlendMode blendMode = BlendMode.BLEND;
+        private Material material;
+
+        private TextureBundle textureBundle;
+
+        public Batch() {
+            // setup mesh
+            vertexPos.setupData(Usage.Stream, 2, VertexBuffer.Format.Float, BufferUtils.createFloatBuffer(BATCH_MAX_VERTICES * 2));
+            vertexPosBuffer = (FloatBuffer) vertexPos.getData();
+            mesh.setBuffer(vertexPos);
+
+            vertexTexCoord.setupData(Usage.Stream, 2, VertexBuffer.Format.Float, BufferUtils.createFloatBuffer(BATCH_MAX_VERTICES * 2));
+            vertexTexCoordBuffer = (FloatBuffer) vertexTexCoord.getData();
+            mesh.setBuffer(vertexTexCoord);
+
+            vertexColor.setupData(Usage.Stream, 4, VertexBuffer.Format.Float, BufferUtils.createFloatBuffer(BATCH_MAX_VERTICES * 4));
+            vertexColorBuffer = (FloatBuffer) vertexColor.getData();
+            mesh.setBuffer(vertexColor);
+
+            indexBuffer.setupData(Usage.Stream, 3, VertexBuffer.Format.UnsignedShort, BufferUtils.createShortBuffer(BATCH_MAX_QUADS * 2 * 3));
+            indexBufferBuffer = (ShortBuffer) indexBuffer.getData();
+            mesh.setBuffer(indexBuffer);
+
+            material = new Material(display.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+            material.setBoolean("VertexColor", true);
+
+            renderState.setDepthTest(false);
+            renderState.setDepthWrite(false);
+        }
+
+        public void setTexture(TextureBundle textureBundle) {
+            this.textureBundle = textureBundle;
+        }
+
+        public void begin(final BlendMode blendMode) {
+            this.blendMode = blendMode;
+            quadCount = 0;
+            globalVertexIndex = 0;
+            vertexPosBuffer.clear();
+            vertexTexCoordBuffer.clear();
+            vertexColorBuffer.clear();
+            indexBufferBuffer.clear();
+        }
+
+        public BlendMode getBlendMode() {
+            return blendMode;
+        }
+
+        public void render() {
+            renderState.setBlendMode(convertBlend(blendMode));
+
+            vertexPosBuffer.flip();
+            vertexPos.updateData(vertexPosBuffer);
+
+            vertexTexCoordBuffer.flip();
+            vertexTexCoord.updateData(vertexTexCoordBuffer);
+
+            vertexColorBuffer.flip();
+            vertexColor.updateData(vertexColorBuffer);
+
+            indexBufferBuffer.flip();
+            indexBuffer.updateData(indexBufferBuffer);
+
+            tempMat.loadIdentity();
+            renderManager.setWorldMatrix(tempMat);
+            renderManager.setForcedRenderState(renderState);
+
+            material.setTexture("ColorMap", textureBundle.texture);
+            material.render(meshGeometry, renderManager);
+            renderManager.setForcedRenderState(null);
+        }
+
+        private RenderState.BlendMode convertBlend(final BlendMode blendMode) {
+            if (blendMode == null) {
+                return RenderState.BlendMode.Off;
+            } else if (blendMode == BlendMode.BLEND) {
+                return RenderState.BlendMode.Alpha;
+            } else if (blendMode == BlendMode.MULIPLY) {
+                return RenderState.BlendMode.Modulate;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        public boolean canAddQuad() {
+            return (quadCount + 1) < BATCH_MAX_QUADS;
+        }
+
+        private void addQuadInternal(
+                final float x,
+                final float y,
+                final float width,
+                final float height,
+                final Color color1,
+                final Color color2,
+                final Color color3,
+                final Color color4,
+                final float textureX,
+                final float textureY,
+                final float textureWidth,
+                final float textureHeight) {
+            indexBufferBuffer.put((short) (globalVertexIndex + 0));
+            indexBufferBuffer.put((short) (globalVertexIndex + 3));
+            indexBufferBuffer.put((short) (globalVertexIndex + 2));
+
+            indexBufferBuffer.put((short) (globalVertexIndex + 0));
+            indexBufferBuffer.put((short) (globalVertexIndex + 2));
+            indexBufferBuffer.put((short) (globalVertexIndex + 1));
+
+            addVertex(x, y, textureX, textureY, color1);
+            addVertex(x + width, y, textureX + textureWidth, textureY, color2);
+            addVertex(x + width, y + height, textureX + textureWidth, textureY + textureHeight, color4);
+            addVertex(x, y + height, textureX, textureY + textureHeight, color3);
+
+            quadCount++;
+            globalVertexIndex += 4;
+        }
+
+        private void addVertex(final float x, final float y, final float tx, final float ty, final Color c) {
+            vertexPosBuffer.put(x);
+            vertexPosBuffer.put(getHeight() - y);
+            vertexTexCoordBuffer.put(tx);
+            vertexTexCoordBuffer.put(ty);
+            vertexColorBuffer.put(c.getRed());
+            vertexColorBuffer.put(c.getGreen());
+            vertexColorBuffer.put(c.getBlue());
+            vertexColorBuffer.put(c.getAlpha());
+        }
+    }
 }

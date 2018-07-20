@@ -49,7 +49,8 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.texture.FrameBuffer;
 
 import de.lessvoid.nifty.Nifty;
-import de.lessvoid.nifty.batch.BatchRenderDevice;
+import de.lessvoid.nifty.render.batch.BatchRenderDevice;
+import de.lessvoid.nifty.spi.time.impl.FastTimeProvider;
 import de.lessvoid.nifty.tools.TimeProvider;
 import de.lessvoid.nifty.tools.resourceloader.ResourceLocation;
 
@@ -66,7 +67,7 @@ public class NiftyJmeDisplay implements SceneProcessor {
     protected SoundDeviceJme soundDev;
     protected Renderer renderer;
     protected ViewPort vp;
-    
+
     protected ResourceLocationJme resourceLocation;
 
     protected int w, h;
@@ -106,7 +107,7 @@ public class NiftyJmeDisplay implements SceneProcessor {
      *
      * A complete re-organisation of the texture atlas happens when a Nifty screen ends and another begins. Dynamically
      * adding images while a screen is running is supported as well.
-     * 
+     *
      * @param assetManager jME AssetManager
      * @param inputManager jME InputManager
      * @param audioRenderer jME AudioRenderer
@@ -127,10 +128,10 @@ public class NiftyJmeDisplay implements SceneProcessor {
       this.batchRendererBackend = new JmeBatchRenderBackend(this);
 
       nifty = new Nifty(
-          new BatchRenderDevice(batchRendererBackend, atlasWidth, atlasHeight),
+          new BatchRenderDevice(batchRendererBackend),
           soundDev,
           inputSys,
-          new TimeProvider());
+          new FastTimeProvider());
       inputSys.setNifty(nifty);
 
       resourceLocation = new ResourceLocationJme();
@@ -147,7 +148,7 @@ public class NiftyJmeDisplay implements SceneProcessor {
      * @param audioRenderer jME AudioRenderer
      * @param viewport Viewport to use
      */
-    public NiftyJmeDisplay(AssetManager assetManager, 
+    public NiftyJmeDisplay(AssetManager assetManager,
                            InputManager inputManager,
                            AudioRenderer audioRenderer,
                            ViewPort vp){
@@ -192,7 +193,7 @@ public class NiftyJmeDisplay implements SceneProcessor {
         inited = true;
         this.vp = vp;
         this.renderer = rm.getRenderer();
-        
+
         inputSys.reset();
         inputSys.setHeight(vp.getCamera().getHeight());
     }
@@ -202,7 +203,7 @@ public class NiftyJmeDisplay implements SceneProcessor {
     }
 
     public void simulateKeyEvent( KeyInputEvent event ) {
-        inputSys.onKeyEvent(event);        
+        inputSys.onKeyEvent(event);
     }
 
     AssetManager getAssetManager() {
